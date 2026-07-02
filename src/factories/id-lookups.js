@@ -191,7 +191,7 @@ export const orgIdLookup = {
   ...sfdBusinessLookup,
 
   1000000000: {
-    sbi: 1000000000,
+    sbi: 100000000,
     customers: [], // org with no customers
     agreements: [], // ... no agreements
     applications: [], // ... no applications
@@ -201,7 +201,7 @@ export const orgIdLookup = {
     overrides: {} // any static overrides for this org can go here
   },
   1111111111: {
-    sbi: 1111111111,
+    sbi: 111111111,
     // Bank-change attempts for this person are locked
     bankLockedPersonIds: [11111119],
     customers: [
@@ -293,7 +293,7 @@ export const orgIdLookup = {
     }
   },
   2222222222: {
-    sbi: 2222222222,
+    sbi: 222222222,
     // FRN: pinned to match the orgId so bank example payloads stay readable.
     overrides: { businessReference: '2222222222' },
     // Bank details not editable.
@@ -383,7 +383,7 @@ export const orgIdLookup = {
   },
   // Contains user with no first name and no messages
   3333333333: {
-    sbi: 3333333333,
+    sbi: 333333333,
     bankAccountStatus: { submitted: false, updatedRecently: false, new: true },
     customers: [
       {
@@ -395,7 +395,7 @@ export const orgIdLookup = {
 
   // Contains user with 10 messages, 5 deleted messages
   3333333334: {
-    sbi: 3333333334,
+    sbi: 333333334,
     customers: [
       {
         personId: 11111141,

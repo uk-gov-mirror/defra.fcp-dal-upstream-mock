@@ -835,7 +835,7 @@ const businessDetailsOrgLookup = Object.fromEntries(
 
 // Other fixed orgs (e.g. org with no CPH for tests).
 const otherFixedOrgsLookup = {
-  [ORG_ID_NO_CPH]: { sbi: 8000000001, customers: [8000001], cphs: [] }
+  [ORG_ID_NO_CPH]: { sbi: 800000001, customers: [8000001], cphs: [] }
 }
 
 export const sfdBusinessLookupCore = {

@@ -132,7 +132,7 @@ describe('Basic queries for faked routes', () => {
           landConfirmed: true,
           locked: false,
           name: 'Maggio, Murray and Dicki',
-          sbi: 1111111111
+          sbi: 111111111
         })
       )
     })
@@ -359,7 +359,7 @@ describe('Basic queries for faked routes', () => {
           mobile: '0800 008521',
           name: 'Maggio, Murray and Dicki',
           persons: [],
-          sbi: 1111111111,
+          sbi: 111111111,
           taxRegistrationNumber: '2272858234',
           traderNumber: '338653',
           vendorNumber: null
@@ -372,7 +372,7 @@ describe('Basic queries for faked routes', () => {
         method: 'POST',
         url: '/extapi/organisation/search',
         payload: {
-          primarySearchPhrase: '1111111111',
+          primarySearchPhrase: '111111111',
           searchFieldType: 'SBI'
         }
       })
@@ -411,7 +411,7 @@ describe('Basic queries for faked routes', () => {
           landConfirmed: true,
           locked: false,
           name: 'Maggio, Murray and Dicki',
-          sbi: 1111111111
+          sbi: 111111111
         })
       )
     })

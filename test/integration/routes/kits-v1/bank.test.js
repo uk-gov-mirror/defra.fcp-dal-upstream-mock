@@ -4,7 +4,7 @@ import { bank } from '../../../../src/routes/kits-v1/bank.js'
 const url = '/bank-change-service/v1/submit'
 const validateUrl = '/bank-change-service/v1/validate'
 
-const knownSbi = 2222222222
+const knownSbi = 222222222
 
 const validPayload = () => ({
   organisationId: '2222222222',

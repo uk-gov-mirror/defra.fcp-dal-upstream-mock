@@ -220,6 +220,13 @@ export const bank = [
     }
   },
   {
+    method: 'GET',
+    path: '/bank-change-service/v1/country-codes',
+    handler: async (_request, h) => {
+      return h.response({ countriesCurrency })
+    }
+  },
+  {
     method: 'POST',
     path: '/bank-change-service/v1/validate',
     handler: async (request, h) => {

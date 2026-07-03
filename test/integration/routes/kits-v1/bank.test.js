@@ -410,3 +410,19 @@ describe('POST /bank-change-service/v1/validate', () => {
     })
   })
 })
+
+describe('GET /bank-change-service/v1/country-codes', () => {
+  it('returns the country/currency mapping conforming to the schema', async () => {
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/bank-change-service/v1/country-codes'
+    })
+    expect(statusCode).toBe(200)
+    expect(result.countriesCurrency).toEqual({
+      GB: 'GBP',
+      IE: 'EUR',
+      IRL: 'EUR',
+      PT: 'EUR'
+    })
+  })
+})

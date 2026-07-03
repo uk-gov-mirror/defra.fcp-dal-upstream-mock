@@ -197,6 +197,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
+  /bank-change-service/v1/country-codes:
+    get:
+      tags:
+        - 'bank'
+      summary: Country code to currency mapping for bank-change payments
+      description: >
+        Returns the mapping of country codes to their payment currency.
+      operationId: getCountryAndCurrency
+      responses:
+        '200':
+          description: Country/currency mapping retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountriesCurrencyResponse'
+              examples:
+                CountriesCurrency:
+                  summary: A map of country codes to currency codes
+                  value:
+                    countriesCurrency:
+                      GB: GBP
+                      IE: EUR
+                      PT: EUR
+                      US: USD
+        '403':
+          description: >
+            Upstream WAF rejects the request (e.g. an administrative rule has been
+            triggered).
+          content:
+            text/html:
+              schema:
+                type: string
+        '500':
+          description: There was an unexpected service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountriesCurrencyResponse'
   /bank-change-service/v1/validate:
     post:
       tags:
@@ -551,6 +589,20 @@ components:
         new:
           type: boolean
           description: Organisation created within the last 24 hours.
+    CountriesCurrencyResponse:
+      type: object
+      properties:
+        countriesCurrency:
+          type: object
+          additionalProperties:
+            type: string
+          description: >
+            Map of country code to the currency code used for payments to that
+            country (e.g. GB maps to GBP, IE maps to EUR).
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseError'
     ResponseError:
       type: object
       properties:

@@ -298,6 +298,10 @@ export const orgIdLookup = {
     overrides: { businessReference: '2222222222' },
     // Bank details not editable.
     bankAccountStatus: { submitted: true, updatedRecently: true, new: false },
+    existingAccounts: [
+      { number: '1234', currency: 'GBP' },
+      { number: '5678', currency: 'EUR' }
+    ],
     customers: [
       { personId: 11111122 },
       { personId: 11111222 },
@@ -522,6 +526,7 @@ export const frnToPaymentOverrides = {}
 export const orgIdToPersonIds = {}
 export const personIdToOrgIds = {}
 export const bankAccountStatusByOrgId = {}
+export const bankExistingAccountsByOrgId = {}
 export const bankLockedPairs = new Set()
 
 // Bank account test accounts. Key is account number
@@ -536,7 +541,8 @@ export const bankValidateTestAccounts = {
 }
 
 Object.entries(orgIdLookup).forEach(([orgId, orgDetails]) => {
-  const { sbi, customers, overrides, bankAccountStatus, bankLockedPersonIds } = orgDetails
+  const { sbi, customers, overrides, bankAccountStatus, bankLockedPersonIds, existingAccounts } =
+    orgDetails
   orgIdToSbi[orgId] = sbi
   sbiToOrgId[sbi] = orgId
 
@@ -575,4 +581,8 @@ Object.entries(orgIdLookup).forEach(([orgId, orgDetails]) => {
   bankLockedPersonIds?.forEach((personId) => {
     bankLockedPairs.add(`${orgId}:${personId}`)
   })
+
+  if (existingAccounts) {
+    bankExistingAccountsByOrgId[orgId] = existingAccounts
+  }
 })

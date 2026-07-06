@@ -56,7 +56,8 @@ case "$1" in
 .components.schemas.ValidateRequest.examples[0].crn = "1100209492" |
 .paths["/bank-change-service/v1/locked-status/{organisationId}/{personId}"].get.parameters[0].schema.examples = ["5583781"] |
 .paths["/bank-change-service/v1/locked-status/{organisationId}/{personId}"].get.parameters[1].schema.examples = ["5020949"] |
-.paths["/bank-change-service/v1/account-status/{organisationId}"].get.parameters[0].schema.examples = ["5583781"]'
+.paths["/bank-change-service/v1/account-status/{organisationId}"].get.parameters[0].schema.examples = ["5583781"] |
+.paths["/bank-change-service/v1/existing-accounts/{frn}"].get.parameters[0].schema.examples = ["10014489653"]'
     kits=true
     ;;
   a | auth | authenticate )

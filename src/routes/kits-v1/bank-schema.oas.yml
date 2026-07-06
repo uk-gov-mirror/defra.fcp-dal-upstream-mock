@@ -235,6 +235,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountriesCurrencyResponse'
+  /bank-change-service/v1/existing-accounts/{frn}:
+    get:
+      tags:
+        - 'bank'
+      summary: Returns the bank accounts held in DAX for an FRN (last 4 digits and currency)
+      operationId: getExistingAccounts
+      parameters:
+        - name: frn
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Existing accounts retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExistingAccountsResponse'
+              examples:
+                Accounts:
+                  summary: A list of accounts existing in DAX
+                  value:
+                    accounts:
+                      - number: '1234'
+                        currency: EUR
+                      - number: '5678'
+                        currency: GBP
+                NoAccounts:
+                  summary: No accounts held in DAX for this FRN
+                  value:
+                    accounts: []
+        '400':
+          description: field validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '403':
+          description: >
+            Upstream WAF rejects requests whose path segment its administrative
+            rules disallow (e.g. non-numeric or 11+ digit values).
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: >
+            Upstream returns 404 when the path resolves to an empty/invalid
+            frn (e.g. control-character segments).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '500':
+          description: There was an unexpected service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
   /bank-change-service/v1/validate:
     post:
       tags:
@@ -599,6 +660,26 @@ components:
           description: >
             Map of country code to the currency code used for payments to that
             country (e.g. GB maps to GBP, IE maps to EUR).
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseError'
+    ExistingAccount:
+      type: object
+      properties:
+        number:
+          type: [string, 'null']
+          description: Last 4 digits of the account number held in DAX.
+        currency:
+          type: [string, 'null']
+          description: Currency of the account (e.g. EUR, GBP).
+    ExistingAccountsResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExistingAccount'
         errors:
           type: array
           items:

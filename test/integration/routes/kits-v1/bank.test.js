@@ -283,6 +283,31 @@ describe('GET /bank-change-service/v1/account-status/{organisationId}', () => {
   })
 })
 
+describe('GET /bank-change-service/v1/existing-accounts/{frn}', () => {
+  it('returns the accounts held in DAX for a known FRN', async () => {
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/bank-change-service/v1/existing-accounts/2222222222'
+    })
+    expect(statusCode).toBe(200)
+    expect(result).toEqual({
+      accounts: [
+        { number: '1234', currency: 'GBP' },
+        { number: '5678', currency: 'EUR' }
+      ]
+    })
+  })
+
+  it('returns an empty accounts list for an FRN with no accounts in DAX', async () => {
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/bank-change-service/v1/existing-accounts/9999999999'
+    })
+    expect(statusCode).toBe(200)
+    expect(result).toEqual({ accounts: [] })
+  })
+})
+
 describe('POST /bank-change-service/v1/validate', () => {
   describe('success scenarios', () => {
     it('returns MATCH for the default happy-path payload', async () => {

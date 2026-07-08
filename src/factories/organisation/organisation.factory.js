@@ -160,7 +160,7 @@ const generateOrganisation = (orgId, sbi, overrides = {}) => {
     correspondenceLandline: faker.phone.number(),
     correspondenceMobile: faker.phone.number(),
     correspondenceFax: null,
-    taxRegistrationNumber: nullOrFake(() => faker.string.numeric(10)),
+    taxRegistrationNumber: nullOrFake(() => faker.string.numeric(9)),
     businessType: {
       id: faker.number.int({ min: 164946, max: 964946 }),
       type: 'Not Specified'

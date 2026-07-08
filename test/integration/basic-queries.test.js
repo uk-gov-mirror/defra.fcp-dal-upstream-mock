@@ -324,11 +324,11 @@ describe('Basic queries for faked routes', () => {
           },
           businessReference: '6561479446',
           businessType: {
-            id: 962248,
+            id: 513326,
             type: 'Not Specified'
           },
-          charityCommissionRegistrationNumber: 'UtKAQapw',
-          companiesHouseRegistrationNumber: 'yPDmr5q7',
+          charityCommissionRegistrationNumber: null,
+          companiesHouseRegistrationNumber: 'GyPDmr5q',
           confirmed: true,
           correspondenceAddress: null,
           correspondenceEmail: 'Anita4@hotmail.com',
@@ -341,9 +341,9 @@ describe('Basic queries for faked routes', () => {
           emailValidated: true,
           fax: null,
           hasAdditionalBusinessActivities: false,
-          hasLandInNorthernIreland: null,
-          hasLandInScotland: false,
-          hasLandInWales: true,
+          hasLandInNorthernIreland: true,
+          hasLandInScotland: true,
+          hasLandInWales: false,
           id: 1111111111,
           isAccountablePeopleDeclarationCompleted: null,
           isCorrespondenceAsBusinessAddr: null,
@@ -352,7 +352,7 @@ describe('Basic queries for faked routes', () => {
           landConfirmed: true,
           landline: '010952 63723',
           legalStatus: {
-            id: 671956,
+            id: 846100,
             type: 'Sole Proprietorship'
           },
           locked: false,
@@ -360,9 +360,9 @@ describe('Basic queries for faked routes', () => {
           name: 'Maggio, Murray and Dicki',
           persons: [],
           sbi: 1111111111,
-          taxRegistrationNumber: '2272858234',
-          traderNumber: '338653',
-          vendorNumber: null
+          taxRegistrationNumber: '227285823',
+          traderNumber: '735338',
+          vendorNumber: '581452'
         })
       )
     })

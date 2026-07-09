@@ -86,9 +86,25 @@ describe('POST /bank-change-service/v1/submit', () => {
       const { statusCode } = await server.inject({ method: 'POST', url, payload })
       expect(statusCode).toBe(200)
     })
+
+    it('accepts non-string field values, mirroring upstream', async () => {
+      const payload = validPayload()
+      payload.account.number = 11111100
+      payload.account.buildingSocietyRollNumber = 12345
+      const { statusCode } = await server.inject({ method: 'POST', url, payload })
+      expect(statusCode).toBe(200)
+    })
   })
 
   describe('error scenarios', () => {
+    it('returns 400 with code 20 when the request body is missing', async () => {
+      const { result, statusCode } = await server.inject({ method: 'POST', url })
+      expect(statusCode).toBe(400)
+      expect(result).toEqual({
+        errors: [{ code: 20, description: 'Request body is missing' }]
+      })
+    })
+
     it('returns 400 with code 20 when all top-level required fields are missing', async () => {
       const { result, statusCode } = await server.inject({
         method: 'POST',
@@ -374,6 +390,18 @@ describe('POST /bank-change-service/v1/validate', () => {
   })
 
   describe('failure scenarios', () => {
+    it('returns one of the valid statuses for an unseeded account number', async () => {
+      const payload = validValidatePayload()
+      payload.account.number = '99999999'
+      const { result, statusCode } = await server.inject({
+        method: 'POST',
+        url: validateUrl,
+        payload
+      })
+      expect(statusCode).toBe(200)
+      expect(['MATCH', 'PARTIAL_MATCH', 'FAILED']).toContain(result.status)
+    })
+
     it('returns FAILED for the FAILED test account number', async () => {
       const payload = validValidatePayload()
       payload.account.number = '33333300'
@@ -391,6 +419,14 @@ describe('POST /bank-change-service/v1/validate', () => {
   })
 
   describe('validation error scenarios', () => {
+    it('returns 400 with code 20 when the request body is missing', async () => {
+      const { result, statusCode } = await server.inject({ method: 'POST', url: validateUrl })
+      expect(statusCode).toBe(400)
+      expect(result).toEqual({
+        errors: [{ code: 20, description: 'Request body is missing' }]
+      })
+    })
+
     it('returns 400 with code 20 when required top-level fields are missing', async () => {
       const { result, statusCode } = await server.inject({
         method: 'POST',

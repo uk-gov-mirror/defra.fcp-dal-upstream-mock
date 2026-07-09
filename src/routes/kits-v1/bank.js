@@ -26,23 +26,17 @@ const ACCOUNT_NUMBER_MIN_LENGTH = 4
 // all 400s return code 20
 const UPSTREAM_ERROR_CODE = 20
 
-const isPresent = (value) => {
-  if (value === undefined || value === null) return false
-  if (typeof value === 'string') return value.length > 0
-  return true
-}
-
 const errorResponse = (h, status, code, description) =>
   h.response({ errors: [{ code, description }] }).code(status)
 
 const collectMissing = (body) => {
   const missing = []
-  if (!isPresent(body.organisationId)) missing.push('Organisation id')
-  if (!isPresent(body.personId)) missing.push('Person id')
-  if (!isPresent(body.sbi)) missing.push('SBI')
-  if (!isPresent(body.frn)) missing.push('FRN')
-  if (!isPresent(body.crn)) missing.push('CRN')
-  if (!isPresent(body.submissionDateTime)) missing.push('Submission date/time')
+  if (!body.organisationId) missing.push('Organisation id')
+  if (!body.personId) missing.push('Person id')
+  if (!body.sbi) missing.push('SBI')
+  if (!body.frn) missing.push('FRN')
+  if (!body.crn) missing.push('CRN')
+  if (!body.submissionDateTime) missing.push('Submission date/time')
   if (!body.account || typeof body.account !== 'object') missing.push('Account information')
   if (!body.country || typeof body.country !== 'object') missing.push('Country information')
   return missing
@@ -50,10 +44,10 @@ const collectMissing = (body) => {
 
 const collectValidateMissing = (body) => {
   const missing = []
-  if (!isPresent(body.sbi)) missing.push('SBI')
-  if (!isPresent(body.frn)) missing.push('FRN')
-  if (!isPresent(body.crn)) missing.push('CRN')
-  if (!isPresent(body.submissionDateTime)) missing.push('Submission date/time')
+  if (!body.sbi) missing.push('SBI')
+  if (!body.frn) missing.push('FRN')
+  if (!body.crn) missing.push('CRN')
+  if (!body.submissionDateTime) missing.push('Submission date/time')
   if (!body.account || typeof body.account !== 'object') missing.push('Account information')
   if (!body.country || typeof body.country !== 'object') missing.push('Country information')
   return missing
@@ -61,14 +55,14 @@ const collectValidateMissing = (body) => {
 
 const collectAccountMissing = (account) => {
   const missing = []
-  if (!isPresent(account.accountType)) missing.push('Account type')
-  if (!isPresent(account.name)) missing.push('Account name')
+  if (!account.accountType) missing.push('Account type')
+  if (!account.name) missing.push('Account name')
   // Schema requires `number` always — upstream NPEs on accountNumber.length() if missing,
   // even when `iban` is provided.
-  if (!isPresent(account.number)) missing.push('Account number')
+  if (!account.number) missing.push('Account number')
   if (!account.bank || typeof account.bank !== 'object') {
     missing.push('Account bank details')
-  } else if (!isPresent(account.bank.name)) {
+  } else if (!account.bank.name) {
     missing.push('Bank name')
   }
   return missing
@@ -76,7 +70,7 @@ const collectAccountMissing = (account) => {
 
 const collectCountryMissing = (country) => {
   const missing = []
-  if (!isPresent(country.currency)) missing.push('Currency')
+  if (!country.currency) missing.push('Currency')
   return missing
 }
 
@@ -147,12 +141,14 @@ const buildValidateSuccess = (status, account) => {
       bank: {}
     }
   }
-  if (isPresent(account.iban)) response.account.iban = account.iban
+  if (account.iban) response.account.iban = String(account.iban)
   if (account.bank) {
-    if (isPresent(account.bank.name)) response.account.bank.name = account.bank.name
+    if (account.bank.name) response.account.bank.name = String(account.bank.name)
     const sortCode = normaliseSortCode(account.bank.sortCode)
     if (sortCode) response.account.bank.sortCode = sortCode
-    if (isPresent(account.bank.swiftCode)) response.account.bank.swiftCode = account.bank.swiftCode
+    if (account.bank.swiftCode) {
+      response.account.bank.swiftCode = String(account.bank.swiftCode)
+    }
   }
   return response
 }

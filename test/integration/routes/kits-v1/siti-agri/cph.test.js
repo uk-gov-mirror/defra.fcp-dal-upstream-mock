@@ -22,11 +22,11 @@ describe('Fake CPH data', () => {
   it('should GET fake CPH data conforming to the schema', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/SitiAgriApi/cv/cphByBusiness/sbi/2222222222/list'
+      url: '/SitiAgriApi/cv/cphByBusiness/sbi/222222222/list'
     })
     expect(statusCode).toBe(200)
     expect(result).toConformToSchema(schema)
-    expect(result.data.every((cph) => cph.sbi === '2222222222')).toBe(true)
+    expect(result.data.every((cph) => cph.sbi === '222222222')).toBe(true)
   })
 
   it('should GET CPH data with overrides defined in the id-lookups', async () => {

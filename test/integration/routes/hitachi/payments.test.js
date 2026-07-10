@@ -17,7 +17,7 @@ describe('Fake Payments', () => {
   describe('factory', () => {
     it('should generate payments array matching the schema', () => {
       const { PaymentsData } = schema.components.schemas
-      const paymentsResponse = retrievePayments('6561479446')
+      const paymentsResponse = retrievePayments('2222222222')
       expect({
         ...paymentsResponse,
         // add dummy values for fields calculated JIT in the route
@@ -40,15 +40,15 @@ describe('Fake Payments', () => {
         headers,
         payload: {
           request: {
-            payment: { SupplierAccount: '6561479446' },
+            payment: { SupplierAccount: '2222222222' },
             audit: {}
           }
         }
       })
       expect(statusCode).toBe(200)
       expect(result).toConformToSchema(schema.components.schemas.PaymentsData)
-      expect(result.parmPayments.length).toEqual(38)
-      expect(result.InfoMessages).toEqual(['No. of payments retrieved = 38'])
+      expect(result.parmPayments.length).toEqual(42)
+      expect(result.InfoMessages).toEqual(['No. of payments retrieved = 42'])
     })
 
     it('should filter payments by FromDate', async () => {
@@ -59,7 +59,7 @@ describe('Fake Payments', () => {
         payload: {
           request: {
             payment: {
-              SupplierAccount: '6561479446',
+              SupplierAccount: '2222222222',
               FromDate: new Date().toISOString() // filter out all dates
             },
             audit: {}
@@ -79,7 +79,7 @@ describe('Fake Payments', () => {
         payload: {
           request: {
             payment: {
-              SupplierAccount: '6561479446',
+              SupplierAccount: '2222222222',
               // filter out all dates (as payments are more recent)
               ToDate: new Date('2000-01-01').toISOString()
             },
@@ -100,7 +100,7 @@ describe('Fake Payments', () => {
         payload: {
           request: {
             payment: {
-              SupplierAccount: '6561479446',
+              SupplierAccount: '2222222222',
               // include all dates (as payments are recent but not made in the future)
               FromDate: new Date('2000-01-01').toISOString(),
               ToDate: new Date().toISOString()
@@ -110,8 +110,8 @@ describe('Fake Payments', () => {
         }
       })
       expect(statusCode).toBe(200)
-      expect(result.parmPayments.length).toEqual(38)
-      expect(result.InfoMessages).toEqual(['No. of payments retrieved = 38'])
+      expect(result.parmPayments.length).toEqual(42)
+      expect(result.InfoMessages).toEqual(['No. of payments retrieved = 42'])
     })
 
     it('honours static data if set', async () => {
@@ -121,7 +121,7 @@ describe('Fake Payments', () => {
         headers,
         payload: {
           request: {
-            payment: { SupplierAccount: '8581665877' },
+            payment: { SupplierAccount: '9622158989' },
             audit: {}
           }
         }
@@ -131,9 +131,9 @@ describe('Fake Payments', () => {
         Result: true,
         parmSupplierInfo: {
           parmHoldCodes: ['NTHLD'],
-          parmAccountLast4: '****7840',
-          parmSortCode: '321133',
-          parmSupplier: 'Little, Stoltenberg and Brakus'
+          parmAccountLast4: '****3632',
+          parmSortCode: '512852',
+          parmSupplier: 'Frami, Treutel and Volkman'
         },
         parmPayments: [], // empty payments array set in `id-lookups.js`
         InfoMessages: ['No. of payments retrieved = 0']

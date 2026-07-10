@@ -1,4 +1,4 @@
-import { Boom } from '@hapi/boom'
+import { internal } from '@hapi/boom'
 import { orgIdToSbi } from '../id-lookups.js'
 import { getLandParcels } from '../common-land.js'
 import { faker, safeSeed } from '../common.js'
@@ -137,7 +137,7 @@ export const retrieveParcelGeometries = (orgId) => {
 export const retrieveCoversSummary = (orgId) => {
   // Strangely this API does actually throw an error for non-existent orgId
   if (!orgIdToSbi[orgId]) {
-    return Boom.internal('Org not found')
+    throw internal('Org not found')
   }
   const { coversSummary } = retrieveOrgLand(orgId)
   return coversSummary

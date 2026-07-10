@@ -16,7 +16,7 @@ describe('Fake Authenticate data', () => {
   it('should GET fake applications data conforming to the schema', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/SitiAgriApi/cv/appByBusiness/sbi/2222222222/list'
+      url: '/SitiAgriApi/cv/appByBusiness/sbi/222222222/list'
     })
     expect(statusCode).toBe(200)
     expect(result).toConformToSchema(

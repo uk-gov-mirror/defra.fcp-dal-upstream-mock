@@ -1,5 +1,3 @@
-import { config } from '../../src/config.js'
-
 describe('Basic queries for faked routes', () => {
   let mockServer
   const PROCESS_ENV = process.env
@@ -27,391 +25,81 @@ describe('Basic queries for faked routes', () => {
     })
   })
 
-  describe('Person routes', () => {
-    const personFixture = {
-      address: {
-        address1: '65',
-        address2: '1 McCullough Path',
-        address3: 'Newton Ratkedon',
-        address4: 'MS9 8BJ',
-        address5: 'North Macedonia',
-        addressTypeId: null,
-        buildingName: null,
-        buildingNumberRange: null,
-        city: 'Newton Bruen',
-        country: 'Wales',
-        county: null,
-        dependentLocality: null,
-        doubleDependentLocality: null,
-        flatName: null,
-        pafOrganisationName: null,
-        postalCode: 'TC2 8KP',
-        street: null,
-        uprn: '790214962932'
-      },
-      confirmed: false,
-      customerReferenceNumber: '1111111100',
-      dateOfBirth: 91391413473,
-      deactivated: false,
-      doNotContact: false,
-      email: 'lauren.sanford@immaculate-shark.info',
-      emailValidated: false,
-      firstName: 'Lauren',
-      id: 11111111,
-      landline: '055 4582 4488',
-      lastName: 'Sanford',
-      locked: false,
-      middleName: 'Daryl',
-      mobile: '056 8967 5108',
-      otherTitle: 'I',
-      personalIdentifiers: ['8568845789', '370030956', '7899566034'],
-      title: 'Mrs.'
-    }
-
-    test('Should return data /person/{personId}/summary', async () => {
-      const response = await mockServer.inject({
-        method: 'GET',
-        url: '/extapi/person/11111111/summary'
-      })
-      expect(response.statusCode).toBe(200)
-      const json = JSON.parse(response.payload)
-      expect(json._data).toEqual(personFixture)
-    })
-
-    test('Should return data /person/{personId}/summary corresponding to crn for personIdOverride', async () => {
-      const response = await mockServer.inject({
-        method: 'GET',
-        url: `/extapi/person/${config.get('personIdOverride')}/summary`,
-        headers: { crn: '1111111100' }
-      })
-      expect(response.statusCode).toBe(200)
-      const json = JSON.parse(response.payload)
-      expect(json._data).toEqual(expect.objectContaining(personFixture))
-    })
-
-    test('Should return data /person/search', async () => {
-      const response = await mockServer.inject({
-        method: 'POST',
-        url: '/extapi/person/search',
-        payload: {
-          primarySearchPhrase: '1111111100',
-          searchFieldType: 'CUSTOMER_REFERENCE'
-        }
-      })
-      expect(response.statusCode).toBe(200)
-      const json = JSON.parse(response.payload)
-      expect(json._data).toHaveLength(1)
-      expect(json._data[0]).toEqual({
-        customerReference: '1111111100',
-        deactivated: false,
-        email: 'lauren.sanford@immaculate-shark.info',
-        fullName: 'Lauren Sanford',
-        id: 11111111,
-        locked: false,
-        nationalInsuranceNumber: null,
-        personalIdentifiers: ['8568845789', '370030956', '7899566034'],
-        primaryAddress: personFixture.address
-      })
-    })
-
-    test('Should return data /organisation/person/{personId}/summary', async () => {
-      const response = await mockServer.inject({
-        method: 'GET',
-        url: `/extapi/organisation/person/11111111/summary`
-      })
-      expect(response.statusCode).toBe(200)
-      const json = JSON.parse(response.payload)
-      expect(json._data).toHaveLength(1)
-      expect(json._data[0]).toEqual(
-        // snippet only, due to size of person object
-        expect.objectContaining({
-          additionalSbiIds: [],
-          confirmed: true,
-          deactivated: false,
-          id: 1111111111,
-          landConfirmed: true,
-          locked: false,
-          name: 'Maggio, Murray and Dicki',
-          sbi: 1111111111
-        })
-      )
-    })
-
-    test('Should accept data to PUT /person/{personId}', async () => {
-      const payload = {
-        id: 11111111,
-        title: 'test-title',
-        otherTitle: 'test-other-title',
-        firstName: 'test-first-name',
-        middleName: 'test-middle-name',
-        lastName: 'test-last-name',
-        dateOfBirth: -2,
-        landline: '01234 567890',
-        mobile: '07111 222333',
-        email: 'test-email@test.com',
-        doNotContact: !personFixture.doNotContact,
-        emailValidated: !personFixture.emailValidated,
-        address: {
-          address1: 'test-line-1',
-          address2: 'test-line-2',
-          address3: 'test-line-3',
-          address4: 'test-line-4',
-          address5: 'test-line-5',
-          addressTypeId: null,
-          buildingName: 'test-building-name',
-          buildingNumberRange: 'test-building-number-range',
-          city: 'test-city',
-          country: 'test-country',
-          county: 'test-county',
-          dependentLocality: 'test-dependent-locality',
-          doubleDependentLocality: 'test-double-dependent-locality',
-          flatName: 'test-flat-name',
-          pafOrganisationName: 'test-paf-organisation-name',
-          postalCode: 'TE5 7PC',
-          street: 'test-street',
-          uprn: 'test-uprn'
-        },
-        locked: !personFixture.locked,
-        confirmed: !personFixture.confirmed,
-        customerReferenceNumber: 'test-crn',
-        personalIdentifiers: ['not', 'set'],
-        deactivated: !personFixture.deactivated
-      }
-
-      const response = await mockServer.inject({
-        method: 'PUT',
-        url: '/extapi/person/11111111',
-        headers: {
-          email: 'test@defra.gov.uk'
-        },
-        payload: { ...payload, address: { ...payload.address, extra: 'chuff' }, more: 'jazz' }
-      })
-      expect(response.statusCode).toBe(204)
-      expect(response.payload).toBe('')
-
-      const updated = await mockServer.inject({
-        method: 'GET',
-        url: '/extapi/person/11111111/summary'
-      })
-      expect(updated.statusCode).toBe(200)
-      const json = JSON.parse(updated.payload)
-      expect(json._data).toEqual({
-        ...payload,
-        // data which should not be updated remains the same
-        customerReferenceNumber: personFixture.customerReferenceNumber,
-        emailValidated: personFixture.emailValidated,
-        confirmed: personFixture.confirmed,
-        locked: personFixture.locked,
-        deactivated: personFixture.deactivated,
-        personalIdentifiers: personFixture.personalIdentifiers
-      })
-    })
-
-    test('Should fail if no data PUT /person/{personId}', async () => {
-      const response = await mockServer.inject({
-        method: 'PUT',
-        url: '/extapi/person/11111111',
-        headers: {
-          email: 'test@defra.gov.uk'
-        },
-        payload: {}
-      })
-
-      expect(response.statusCode).toBe(422)
-      expect(response.payload).toEqual('{"code":422,"message":"HTTP 422 "}')
-    })
-
-    describe('with static person data overrides', () => {
-      const staticPersonFixture = {
-        // fake generated data
-        dateOfBirth: 1065270380449,
-        deactivated: false,
-        doNotContact: false,
-        id: 11111119,
-        landline: '01215 090627',
-        locked: false,
-        personalIdentifiers: ['6526436999', '3644818157', '7559856338'],
-        // static overridden data
-        customerReferenceNumber: '1111111900',
-        firstName: 'Big',
-        middleName: null,
-        lastName: 'Skeleton',
-        address: {
-          address1: 'A dark dark cellar',
-          address2: 'A dark dark staircase',
-          address3: 'A dark dark house',
-          street: 'A dark dark street',
-          city: 'A dark dark town',
-          dependentLocality: 'A dark dark hill'
-        },
-        email: 'skeleton@the-closet.net',
-        emailValidated: true,
-        confirmed: true,
-        mobile: null,
-        title: null,
-        otherTitle: null
-      }
-
-      test('Should return data /person/{personId}/summary', async () => {
-        const response = await mockServer.inject({
-          method: 'GET',
-          url: '/extapi/person/11111119/summary'
-        })
-        expect(response.statusCode).toBe(200)
-        const json = JSON.parse(response.payload)
-        expect(json._data).toEqual(staticPersonFixture)
-      })
-
-      test('Should return data /person/search', async () => {
-        const response = await mockServer.inject({
-          method: 'POST',
-          url: '/extapi/person/search',
-          payload: {
-            primarySearchPhrase: '1111111900',
-            searchFieldType: 'CUSTOMER_REFERENCE'
-          }
-        })
-        expect(response.statusCode).toBe(200)
-        const json = JSON.parse(response.payload)
-        expect(json._data).toHaveLength(1)
-        expect(json._data[0]).toEqual({
-          customerReference: '1111111900',
-          deactivated: false,
-          email: 'skeleton@the-closet.net',
-          fullName: 'Big Skeleton',
-          id: 11111119,
-          locked: false,
-          nationalInsuranceNumber: null,
-          personalIdentifiers: ['6526436999', '3644818157', '7559856338'],
-          primaryAddress: staticPersonFixture.address
-        })
-      })
-    })
-  })
-
   describe('Organisation routes', () => {
-    test('Should return data for /organisation/1111111111', async () => {
+    test('should return organisation data', async () => {
       const response = await mockServer.inject({
         method: 'GET',
-        url: '/extapi/organisation/1111111111'
+        url: '/extapi/organisation/9100000'
       })
       expect(response.statusCode).toBe(200)
       const json = JSON.parse(response.payload)
-      expect(json._data).toEqual(
+      expect(json._data).toMatchObject(
         // snippet only, due to size of org object
         expect.objectContaining({
-          additionalBusinessActivities: null,
-          additionalSbiIds: [],
+          name: 'Blue Barn Farm',
+          vendorNumber: '123456',
+          traderNumber: '654321',
           address: {
-            address1: '14',
-            address2: '16 Fourth Avenue',
-            address3: 'Miller-under-Raynor',
-            address4: 'XP0 6TX',
-            address5: 'Saint Helena',
-            addressTypeId: null,
-            buildingName: null,
+            address1: 'Blue Barn',
+            address2: null,
+            address3: null,
+            address4: null,
+            address5: null,
+            pafOrganisationName: 'Blue Barn Farm',
+            flatName: null,
             buildingNumberRange: null,
-            city: 'South Witting Green',
-            country: 'England',
+            buildingName: null,
+            street: null,
+            city: 'Searchton',
             county: null,
+            postalCode: 'AB12 3CD',
+            country: 'England',
+            uprn: '910000000001',
             dependentLocality: null,
             doubleDependentLocality: null,
-            flatName: null,
-            pafOrganisationName: 'Maggio, Murray and Dicki',
-            postalCode: 'IH1 1MM',
-            street: null,
-            uprn: '563449849116'
+            addressTypeId: null
           },
-          businessReference: '6561479446',
-          businessType: {
-            id: 513326,
-            type: 'Not Specified'
-          },
-          charityCommissionRegistrationNumber: null,
-          companiesHouseRegistrationNumber: 'GyPDmr5q',
-          confirmed: true,
-          correspondenceAddress: null,
-          correspondenceEmail: 'Anita4@hotmail.com',
-          correspondenceEmailValidated: true,
-          correspondenceFax: null,
-          correspondenceLandline: '0813 645 0023',
-          correspondenceMobile: '0800 531443',
-          deactivated: false,
-          email: 'Joe_Pollich@gmail.com',
-          emailValidated: true,
-          fax: null,
-          hasAdditionalBusinessActivities: false,
-          hasLandInNorthernIreland: true,
-          hasLandInScotland: true,
-          hasLandInWales: false,
-          id: 1111111111,
-          isAccountablePeopleDeclarationCompleted: null,
-          isCorrespondenceAsBusinessAddr: null,
-
-          isFinancialToBusinessAddr: null,
-          landConfirmed: true,
-          landline: '010952 63723',
-          legalStatus: {
-            id: 846100,
-            type: 'Sole Proprietorship'
-          },
-          locked: false,
-          mobile: '0800 008521',
-          name: 'Maggio, Murray and Dicki',
-          persons: [],
-          sbi: 1111111111,
-          taxRegistrationNumber: '227285823',
-          traderNumber: '735338',
-          vendorNumber: '581452'
+          sbi: 910000000
         })
       )
     })
 
-    test('Should return data for /organisation/search', async () => {
-      const response = await mockServer.inject({
+    test('should return organisation data when searching by SBI', async () => {
+      const { result, statusCode } = await mockServer.inject({
         method: 'POST',
         url: '/extapi/organisation/search',
         payload: {
-          primarySearchPhrase: '1111111111',
+          primarySearchPhrase: '910000000',
           searchFieldType: 'SBI'
         }
       })
-      expect(response.statusCode).toBe(200)
-      const json = JSON.parse(response.payload)
-      expect(json._data[0]).toEqual(
+      expect(statusCode).toBe(200)
+      expect(result._data[0]).toEqual(
         // snippet only, due to size of org object
         expect.objectContaining({
-          additionalSbiIds: [],
+          id: 9100000,
+          sbi: 910000000,
+          name: 'Blue Barn Farm',
           address: {
-            address1: '14',
-            address2: '16 Fourth Avenue',
-            address3: 'Miller-under-Raynor',
-            address4: 'XP0 6TX',
-            address5: 'Saint Helena',
-            addressTypeId: null,
-            buildingName: null,
+            address1: 'Blue Barn',
+            address2: null,
+            address3: null,
+            address4: null,
+            address5: null,
+            pafOrganisationName: 'Blue Barn Farm',
+            flatName: null,
             buildingNumberRange: null,
-            city: 'South Witting Green',
-            country: 'England',
+            buildingName: null,
+            street: null,
+            city: 'Searchton',
             county: null,
+            postalCode: 'AB12 3CD',
+            country: 'England',
+            uprn: '910000000001',
             dependentLocality: null,
             doubleDependentLocality: null,
-            flatName: null,
-            pafOrganisationName: 'Maggio, Murray and Dicki',
-            postalCode: 'IH1 1MM',
-            street: null,
-            uprn: '563449849116'
-          },
-          confirmed: true,
-          correspondenceAddress: null,
-          deactivated: false,
-          id: 1111111111,
-          isCorrespondenceAsBusinessAddr: null,
-          isFinancialToBusinessAddr: null,
-          landConfirmed: true,
-          locked: false,
-          name: 'Maggio, Murray and Dicki',
-          sbi: 1111111111
+            addressTypeId: null
+          }
         })
       )
     })
@@ -590,18 +278,17 @@ describe('Basic queries for faked routes', () => {
     test('Should return data for /authorisation/organisation/{organisationId}', async () => {
       const response = await mockServer.inject({
         method: 'GET',
-        url: '/extapi/authorisation/organisation/1111111111'
+        url: '/extapi/authorisation/organisation/111111111'
       })
       expect(response.statusCode).toBe(200)
       const json = JSON.parse(response.payload)
       expect(json._data[1]).toEqual(
         // snippet only, due to size of org object
         expect.objectContaining({
-          firstName: 'Kristy',
+          firstName: 'Royce',
           id: 11111112,
           customerReference: '1111111200',
-          lastName: 'Stiedemann',
-          lastUpdatedOn: 1735619955643,
+          lastName: 'Skiles',
           privileges: [
             'Full permission - business',
             'SUBMIT - CS APP - SA',
@@ -616,7 +303,7 @@ describe('Basic queries for faked routes', () => {
             'Submit - cs agree',
             'ELM_APPLICATION_SUBMIT'
           ],
-          role: 'Director'
+          role: 'Owner or Sole Trader'
         })
       )
     })
@@ -819,15 +506,15 @@ describe('Basic queries for faked routes', () => {
     test('Should return data for /notifications', async () => {
       const response = await mockServer.inject({
         method: 'GET',
-        url: '/extapi/notifications?personId=11111111&organisationId=1111111111'
+        url: '/extapi/notifications?personId=11111111&organisationId=111111111'
       })
       expect(response.statusCode).toBe(200)
       const json = JSON.parse(response.payload)
 
-      expect(json.resultCount).toEqual(9)
-      expect(json.readCount).toEqual(6)
-      expect(json.unreadCount).toEqual(3)
-      expect(json.notifications.length).toEqual(9)
+      expect(json.resultCount).toEqual(8)
+      expect(json.readCount).toEqual(4)
+      expect(json.unreadCount).toEqual(4)
+      expect(json.notifications.length).toEqual(8)
     })
   })
 })

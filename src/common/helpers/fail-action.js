@@ -21,7 +21,7 @@ export const emulateUpstreamErrors = (request, h) => {
         },
         response: {
           status_code: code,
-          ...(info?.received && { response_time: new Date().getTime() - info.received })
+          ...(info?.received && { response_time: Date.now() - info.received })
         }
       },
       error: {

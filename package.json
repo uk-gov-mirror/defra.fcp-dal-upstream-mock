@@ -15,8 +15,8 @@
     "lint": "eslint . && prettier --check . && npm run verify:schemata",
     "lint:fix": "eslint . --fix && prettier --log-level warn --write .",
     "postversion": "git add package.json package-lock.json && git commit -m $npm_package_version",
-    "test": "NODE_OPTIONS=--experimental-vm-modules node --no-experimental-require-module ./node_modules/jest/bin/jest.js --coverage --verbose --runInBand --detectOpenHandles",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules node --no-experimental-require-module ./node_modules/jest/bin/jest.js --watch",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
     "start": "NODE_ENV=production node --use-strict . | jq .",
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module",
     "test:contract": "docker compose -f compose.yml -f test/contract/compose.yml run --quiet-pull --pull always --build --rm contract-tests",
@@ -29,7 +29,7 @@
     "@apidevtools/swagger-parser": "^12.0.0",
     "@defra/hapi-tracing": "^1.0.0",
     "@elastic/ecs-pino-format": "^1.5.0",
-    "@faker-js/faker": "^9.8.0",
+    "@faker-js/faker": "^10.4.0",
     "@hapi/boom": "^10.0.1",
     "@hapi/hapi": "^21.3.12",
     "@hapi/inert": "^7.1.0",
@@ -37,34 +37,31 @@
     "ajv-formats": "^3.0.1",
     "convict": "^6.2.4",
     "hapi-pino": "^13.0.0",
-    "hapi-pulse": "3.0.0",
+    "hapi-pulse": "^4.0.0",
     "pino": "^10.0.0",
     "pino-pretty": "^13.0.0",
     "undici": "^7.28.0"
   },
   "devDependencies": {
     "@redocly/cli": "1.29.0",
+    "@vitest/coverage-v8": "4.1.9",
     "dotenv-cli": "^10.0.0",
     "eslint": "^9.32.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jest": "^28.11.0",
-    "globals": "^16.0.0",
+    "globals": "^17.7.0",
     "husky": "^9.1.6",
-    "jest": "30.4.2",
     "nodemon": "^3.1.7",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "vitest": "^4.1.9"
   },
   "overrides": {
-    "baseline-browser-mapping": "^2.10.33",
-    "joi": "^18.2.1",
     "js-yaml": "^4.2.0",
     "form-data": "^4.0.6",
     "dompurify": "^3.4.11"
   },
   "eslintConfig": {
     "extends": [
-      "eslint-plugin-import",
-      "eslint-plugin-jest"
+      "eslint-plugin-import"
     ]
   }
 }

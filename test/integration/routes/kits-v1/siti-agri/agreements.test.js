@@ -15,16 +15,16 @@ describe('Basic queries for faked routes', () => {
   })
 
   describe('SitiAgri route', () => {
-    it('Should return data for /SitiAgriApi/cv/agreementsByBusiness/sbi/1111111111/list', async () => {
+    it('Should return data for /SitiAgriApi/cv/agreementsByBusiness/sbi/111111111/list', async () => {
       const response = await server.inject({
         method: 'GET',
-        url: `/SitiAgriApi/cv/agreementsByBusiness/sbi/1111111111/list`
+        url: `/SitiAgriApi/cv/agreementsByBusiness/sbi/111111111/list`
       })
 
       expect(response.statusCode).toBe(200)
       const json = JSON.parse(response.payload)
 
-      const agreements = retrieveOrganisationAgreements(1111111111)
+      const agreements = retrieveOrganisationAgreements(111111111)
       expect(json.data).toEqual(agreements)
     })
     it('Should return random data for SBI without defined agreements in config', async () => {
@@ -43,7 +43,7 @@ describe('Basic queries for faked routes', () => {
     it('should GET a agreements conforming to the schema', async () => {
       const { result, statusCode } = await server.inject({
         method: 'GET',
-        url: '/SitiAgriApi/cv/agreementsByBusiness/sbi/1111111111/list'
+        url: '/SitiAgriApi/cv/agreementsByBusiness/sbi/111111111/list'
       })
       expect(statusCode).toBe(200)
       expect(result).toConformToSchema(

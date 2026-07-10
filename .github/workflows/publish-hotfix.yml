@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0 # Depth 0 is required for branch-based versioning
 
       - name: Setup Node and NPM
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - name: Install, lint, & test
@@ -35,6 +35,6 @@ jobs:
           npm test
 
       - name: Publish Hot Fix
-        uses: DEFRA/cdp-build-action/build-hotfix@main
+        uses: DEFRA/cdp-build-action/build-hotfix@85634fe241460c95b8115be1a68cb3479d71a15e # Jun 23, 2026
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

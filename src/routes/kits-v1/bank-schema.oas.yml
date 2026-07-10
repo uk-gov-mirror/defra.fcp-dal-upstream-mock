@@ -33,7 +33,7 @@ paths:
                 summary: A bank change request
                 description: Bank change request
                 value:
-                  sbi: '2222222222'
+                  sbi: '222222222'
                   frn: '2222222222'
                   crn: '2222222000'
                   submissionDateTime: 02/05/2026 14:12:11
@@ -76,6 +76,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
+
   /bank-change-service/v1/locked-status/{organisationId}/{personId}:
     get:
       tags:
@@ -133,6 +134,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
+
   /bank-change-service/v1/account-status/{organisationId}:
     get:
       tags:
@@ -197,6 +199,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
+
   /bank-change-service/v1/country-codes:
     get:
       tags:
@@ -235,6 +238,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountriesCurrencyResponse'
+
   /bank-change-service/v1/existing-accounts/{frn}:
     get:
       tags:
@@ -296,6 +300,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultResponse'
+
   /bank-change-service/v1/validate:
     post:
       tags:
@@ -313,7 +318,7 @@ paths:
               ValidateRequest:
                 summary: A bank validation request
                 value:
-                  sbi: '2222222222'
+                  sbi: '222222222'
                   frn: '2222222222'
                   crn: '2222222000'
                   dateOfBirth: 21/04/2000
@@ -387,6 +392,7 @@ paths:
                     type: string
                   path:
                     type: string
+
 components:
   securitySchemes:
     mTLS:

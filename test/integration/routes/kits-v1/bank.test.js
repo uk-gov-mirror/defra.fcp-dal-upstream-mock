@@ -4,13 +4,13 @@ import { bank } from '../../../../src/routes/kits-v1/bank.js'
 const url = '/bank-change-service/v1/submit'
 const validateUrl = '/bank-change-service/v1/validate'
 
-const knownSbi = 2222222222
+const knownSbi = 222222222
 
 const validPayload = () => ({
-  organisationId: '2222222222',
+  organisationId: '222222222',
   personId: '22222220',
   sbi: String(knownSbi),
-  frn: '2222222222',
+  frn: '222222222',
   crn: '2222222000',
   submissionDateTime: '02/05/2026 14:12:11',
   account: {
@@ -225,7 +225,7 @@ describe('GET /bank-change-service/v1/locked-status/{organisationId}/{personId}'
   it('returns locked:false for an org/person pair that has no recent failures', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/bank-change-service/v1/locked-status/1111111111/11111111'
+      url: '/bank-change-service/v1/locked-status/111111111/11111111'
     })
     expect(statusCode).toBe(200)
     expect(result).toEqual({ locked: false })
@@ -234,7 +234,7 @@ describe('GET /bank-change-service/v1/locked-status/{organisationId}/{personId}'
   it('returns locked:true', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/bank-change-service/v1/locked-status/1111111111/11111119'
+      url: '/bank-change-service/v1/locked-status/111111111/11111119'
     })
     expect(statusCode).toBe(200)
     expect(result).toEqual({ locked: true })
@@ -245,7 +245,7 @@ describe('GET /bank-change-service/v1/account-status/{organisationId}', () => {
   it('returns editable:true for an organisation with no overrides', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/bank-change-service/v1/account-status/1111111111'
+      url: '/bank-change-service/v1/account-status/111111111'
     })
     expect(statusCode).toBe(200)
     expect(result).toEqual({
@@ -259,7 +259,7 @@ describe('GET /bank-change-service/v1/account-status/{organisationId}', () => {
   it('returns editable:false when the org was recently submitted', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/bank-change-service/v1/account-status/2222222222'
+      url: '/bank-change-service/v1/account-status/222222222'
     })
     expect(statusCode).toBe(200)
     expect(result).toEqual({
@@ -273,7 +273,7 @@ describe('GET /bank-change-service/v1/account-status/{organisationId}', () => {
   it('returns editable:false when the org is new', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/bank-change-service/v1/account-status/3333333333'
+      url: '/bank-change-service/v1/account-status/333333333'
     })
     expect(statusCode).toBe(200)
     expect(result).toEqual({

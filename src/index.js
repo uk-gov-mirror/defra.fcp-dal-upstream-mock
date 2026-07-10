@@ -1,5 +1,5 @@
-import { createServer as createHttpServer } from 'http'
-import { createServer as createHttpsServer } from 'https'
+import { createServer as createHttpServer } from 'node:http'
+import { createServer as createHttpsServer } from 'node:https'
 import process from 'node:process'
 import { createLogger } from './common/helpers/logging/logger.js'
 import { config } from './config.js'

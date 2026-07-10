@@ -1,4 +1,12 @@
-import { jest } from '@jest/globals'
+import * as https from 'node:https'
+
+vi.mock('node:https', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    createServer: vi.fn()
+  }
+})
 
 describe('createListener with TLS', () => {
   const PROCESS_ENV = process.env
@@ -16,18 +24,12 @@ describe('createListener with TLS', () => {
   })
 
   test('Creates an HTTPS server and enables mTLS', async () => {
-    let capturedOpts = null
-    jest.unstable_mockModule('https', () => ({
-      createServer: (opts) => {
-        capturedOpts = opts
-        return { on: jest.fn(), listen: jest.fn() }
-      }
-    }))
+    https.createServer.mockImplementation(() => ({ on: vi.fn(), listen: vi.fn() }))
 
     const idx = await import('../../src/index.js')
     idx.createListener()
 
-    expect(capturedOpts).toEqual(
+    expect(https.createServer).toHaveBeenCalledWith(
       expect.objectContaining({
         key: 'key',
         cert: 'cert',

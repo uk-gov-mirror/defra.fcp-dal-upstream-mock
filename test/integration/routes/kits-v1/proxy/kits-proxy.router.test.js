@@ -1,24 +1,22 @@
 import Hapi from '@hapi/hapi'
-import { afterAll, beforeAll, beforeEach, describe, expect, jest, test } from '@jest/globals'
 
-const mockFetch = jest.fn()
-
-jest.unstable_mockModule('undici', () => ({
+const mockFetch = vi.fn()
+vi.mock('undici', () => ({
   fetch: mockFetch,
   EnvHttpProxyAgent: class {
     constructor() {}
   }
 }))
 
-jest.unstable_mockModule('node:tls', () => ({
-  default: { createSecureContext: jest.fn().mockReturnValue({}) }
+vi.mock('node:tls', () => ({
+  default: { createSecureContext: vi.fn().mockReturnValue({}) }
 }))
 
 const INTERNAL_URL = 'http://internal-gateway.test'
 const EXTERNAL_URL = 'http://external-gateway.test'
 
-jest.unstable_mockModule('../../../../../src/common/helpers/logging/logger.js', () => ({
-  createLogger: () => ({ debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() })
+vi.mock('../../../../../src/common/helpers/logging/logger.js', () => ({
+  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() })
 }))
 
 let mockMTLSConfig = {
@@ -26,7 +24,7 @@ let mockMTLSConfig = {
   external: { cert: 'external-cert', key: 'external-key' }
 }
 
-jest.unstable_mockModule('../../../../../src/config.js', () => ({
+vi.mock('../../../../../src/config.js', () => ({
   config: {
     get: (key) =>
       ({

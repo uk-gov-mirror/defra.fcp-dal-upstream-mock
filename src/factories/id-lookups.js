@@ -5,7 +5,7 @@ import { sfdBusinessLookup, sfdPersonLookup } from './sfd-test-data/index.js'
 export const staticPersonData = {
   ...sfdPersonLookup,
 
-  // people in org 1111111111 only
+  // people in org 111111111 only
   11111111: { crn: '1111111100' },
   11111112: { crn: '1111111200' },
   11111113: { crn: '1111111300' },
@@ -28,14 +28,16 @@ export const staticPersonData = {
       city: 'A dark dark town',
       dependentLocality: 'A dark dark hill'
     },
+    dateOfBirth: 1065270380449,
     email: 'skeleton@the-closet.net',
     emailValidated: true,
     confirmed: true,
     mobile: null,
+    landline: '01215 090627',
     title: null,
     otherTitle: null
   },
-  // Person in org 3333333333
+  // Person in org 333333333
   11111120: {
     crn: '1111111901',
     title: 'Lady',
@@ -45,7 +47,7 @@ export const staticPersonData = {
     lastName: 'Grey',
     privileges: []
   },
-  // Person in org 3333333334
+  // Person in org 333333334
   11111141: {
     crn: '1111111902',
     title: 'Mr',
@@ -54,14 +56,14 @@ export const staticPersonData = {
     middleName: '',
     lastName: 'Forsyth'
   },
-  // people in org 1111111111 and 2222222222
+  // people in org 111111111 and 222222222
   11111122: { crn: '1111112200' },
   11111222: { crn: '1111122200' },
   11112222: { crn: '1111222200' },
   11122222: { crn: '1112222200' },
   11222222: { crn: '1122222200' },
   12222222: { crn: '1222222200' },
-  // people in org 2222222222 only
+  // people in org 222222222 only
   22222220: { crn: '2222222000' },
   22222221: { crn: '2222222100' },
   22222222: { crn: '2222222200' },
@@ -190,8 +192,8 @@ const validGeometries = JSON.parse(
 export const orgIdLookup = {
   ...sfdBusinessLookup,
 
-  1000000000: {
-    sbi: 1000000000,
+  100000000: {
+    sbi: 100000000,
     customers: [], // org with no customers
     agreements: [], // ... no agreements
     applications: [], // ... no applications
@@ -200,8 +202,8 @@ export const orgIdLookup = {
     payments: { parmPayments: [] }, // ... no payments
     overrides: {} // any static overrides for this org can go here
   },
-  1111111111: {
-    sbi: 1111111111,
+  111111111: {
+    sbi: 111111111,
     // Bank-change attempts for this person are locked
     bankLockedPersonIds: [11111119],
     customers: [
@@ -223,16 +225,16 @@ export const orgIdLookup = {
     ],
     agreements: [
       {
-        contract_id: '1111111111',
-        payment_schedules: [1111111111, 1111111112, 1111111113]
+        contract_id: '111111111',
+        payment_schedules: [111111111, 111111112, 111111113]
       },
       {
-        contract_id: '1111111112',
-        payment_schedules: [1111111121, 1111111122, 1111111123]
+        contract_id: '111111112',
+        payment_schedules: [111111121, 111111122, 111111123]
       },
       {
-        contract_id: '1111111113',
-        payment_schedules: [1111111131, 1111111132, 1111111133]
+        contract_id: '111111113',
+        payment_schedules: [111111131, 111111132, 111111133]
       }
     ],
     applications: [{ application_history: [{}] }],
@@ -292,8 +294,8 @@ export const orgIdLookup = {
       ]
     }
   },
-  2222222222: {
-    sbi: 2222222222,
+  222222222: {
+    sbi: 222222222,
     // FRN: pinned to match the orgId so bank example payloads stay readable.
     overrides: { businessReference: '2222222222' },
     // Bank details not editable.
@@ -372,22 +374,22 @@ export const orgIdLookup = {
     ],
     agreements: [
       {
-        contract_id: '2222222222',
+        contract_id: '222222222',
         payment_schedules: [2222222212, 2222222213, 2222222214]
       },
       {
-        contract_id: '2222222223',
-        payment_schedules: [2222222222, 2222222223, 2222222224]
+        contract_id: '222222223',
+        payment_schedules: [222222222, 222222223, 222222224]
       },
       {
-        contract_id: '2222222224',
-        payment_schedules: [2222222232, 2222222233, 2222222234]
+        contract_id: '222222224',
+        payment_schedules: [222222232, 222222233, 222222234]
       }
     ]
   },
   // Contains user with no first name and no messages
-  3333333333: {
-    sbi: 3333333333,
+  333333333: {
+    sbi: 333333333,
     bankAccountStatus: { submitted: false, updatedRecently: false, new: true },
     customers: [
       {
@@ -398,8 +400,8 @@ export const orgIdLookup = {
   },
 
   // Contains user with 10 messages, 5 deleted messages
-  3333333334: {
-    sbi: 3333333334,
+  333333334: {
+    sbi: 333333334,
     customers: [
       {
         personId: 11111141,
@@ -431,10 +433,10 @@ export const orgIdLookup = {
   },
 
   // Orgs that always returns specific status when requested
-  3000000206: { sbi: 300000206, customers: [] },
-  3000000401: { sbi: 300000401, customers: [] },
-  3000000403: { sbi: 300000403, customers: [] },
-  3000000500: { sbi: 300000500, customers: [] },
+  300000206: { sbi: 300000206, customers: [] },
+  300000401: { sbi: 300000401, customers: [] },
+  300000403: { sbi: 300000403, customers: [] },
+  300000500: { sbi: 300000500, customers: [] },
 
   // business from dev CRM
   5565448: {

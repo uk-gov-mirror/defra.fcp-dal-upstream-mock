@@ -11,7 +11,7 @@ describe('Organisation Lock/Unlock', () => {
 
   describe('Lock', () => {
     it('should lock an organisation successfully', async () => {
-      const organisationId = 1000000000
+      const organisationId = 100000000
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/lock`,
@@ -24,7 +24,7 @@ describe('Organisation Lock/Unlock', () => {
     })
 
     it('should return server error when organisation does not exist', async () => {
-      const organisationId = 9999999999
+      const organisationId = 999999999
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/lock`,
@@ -37,7 +37,7 @@ describe('Organisation Lock/Unlock', () => {
     })
 
     it('should return bad request when payload is invalid', async () => {
-      const organisationId = 1000000000
+      const organisationId = 100000000
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/lock`,
@@ -52,7 +52,7 @@ describe('Organisation Lock/Unlock', () => {
 
   describe('Unlock', () => {
     it('should lock an organisation successfully', async () => {
-      const organisationId = 1000000000
+      const organisationId = 100000000
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/unlock`,
@@ -65,7 +65,7 @@ describe('Organisation Lock/Unlock', () => {
     })
 
     it('should return server error when organisation does not exist', async () => {
-      const organisationId = 9999999999
+      const organisationId = 999999999
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/unlock`,
@@ -78,7 +78,7 @@ describe('Organisation Lock/Unlock', () => {
     })
 
     it('should return bad request when payload is invalid', async () => {
-      const organisationId = 1000000000
+      const organisationId = 100000000
       const { statusCode } = await server.inject({
         method: 'POST',
         url: `/organisation/${organisationId}/unlock`,

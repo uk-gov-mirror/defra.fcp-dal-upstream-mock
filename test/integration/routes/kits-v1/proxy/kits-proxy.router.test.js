@@ -143,6 +143,8 @@ describe('KITS Proxy router', () => {
         url: '/internal/extapi/person/123/summary',
         headers: {
           email: 'email@example.com',
+          authorization: 'Bearer defra-id-token',
+          crn: '1100209492',
           'content-type': 'application/json',
           accept: 'application/json',
           'x-custom-header': 'should-be-filtered',
@@ -154,6 +156,9 @@ describe('KITS Proxy router', () => {
 
       const [, { headers }] = mockFetch.mock.calls[0]
       expect(headers['email']).toBe('email@example.com')
+      // external-gateway auth headers (see fcp-dal-api RuralPayments.addAuthentication)
+      expect(headers['authorization']).toBe('Bearer defra-id-token')
+      expect(headers['crn']).toBe('1100209492')
       expect(headers['content-type']).toBe('application/json')
       expect(headers['accept']).toBe('application/json')
       expect(headers['x-custom-header']).toBeUndefined()

@@ -1,11 +1,13 @@
-import { fetch as fetch11, EnvHttpProxyAgent } from 'undici'
-import { config } from '../../config.js'
-import { createLogger } from '../../common/helpers/logging/logger.js'
 import tls from 'node:tls'
+import { EnvHttpProxyAgent, fetch as fetch11 } from 'undici'
+import { createLogger } from '../../common/helpers/logging/logger.js'
+import { config } from '../../config.js'
 
 const logger = createLogger()
 
-const ALLOWED_REQUEST_HEADERS = new Set(['email', 'content-type', 'accept'])
+// `email` authenticates internal-gateway calls; `authorization` + `crn` authenticate
+// external-gateway calls
+const ALLOWED_REQUEST_HEADERS = new Set(['email', 'authorization', 'crn', 'content-type', 'accept'])
 const ALLOWED_RESPONSE_HEADERS = new Set(['content-type'])
 
 const extractRequestHeaders = (headers) =>

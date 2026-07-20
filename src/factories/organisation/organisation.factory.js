@@ -302,3 +302,91 @@ export const unlockOrganisation = (orgId) => {
     throw Boom.internal(e.message)
   }
 }
+
+/**
+ * Create an authorisation (link a person to an organisation with role + privileges).
+ * Throws Boom errors for missing org/person or duplicate link.
+ */
+export const createAuthorisation = (orgId, payload) => {
+  const org = retrieveOrganisation(orgId) // throws if not found
+  if (!org) throw Boom.notFound(`organisation with orgId ${orgId} not found`)
+
+  const personRoles = payload?.personRoles ?? []
+  if (!Array.isArray(personRoles) || personRoles.length === 0) {
+    throw Boom.badRequest('personRoles array is required')
+  }
+
+  const results = []
+
+  for (const pr of personRoles) {
+    const personId = pr.personId
+    if (!personId) {
+      throw Boom.badRequest('personId is required in personRoles entry')
+    }
+
+    // Ensure person exists
+    let person
+    try {
+      person = retrievePerson(personId)
+    } catch {
+      throw Boom.notFound(`person with personId ${personId} not found`)
+    }
+
+    const existing = (orgIdToPersonIds[orgId] || []).includes(personId)
+    if (existing) {
+      throw Boom.conflict(`person ${personId} is already authorised on organisation ${orgId}`)
+    }
+
+    // Add the link
+    if (!orgIdToPersonIds[orgId]) orgIdToPersonIds[orgId] = []
+    orgIdToPersonIds[orgId].push(personId)
+
+    // Set role / privileges on the person (current model stores them at person level)
+    const role = pr.role ?? null
+    const privilegeNames = pr.personPrivileges?.[0]?.privilegeNames ?? pr.privilegeNames ?? []
+
+    person.role = role
+    person.privileges = privilegeNames
+
+    results.push({ personId, role, privileges: privilegeNames })
+  }
+
+  return results
+}
+
+/**
+ * Update an existing authorisation for a person on an organisation.
+ * Throws Boom errors for missing org/person or missing existing link.
+ */
+export const updateAuthorisation = (orgId, personId, payload) => {
+  const org = retrieveOrganisation(orgId)
+  if (!org) throw Boom.notFound(`organisation with orgId ${orgId} not found`)
+
+  const personIds = orgIdToPersonIds[orgId] || []
+  if (!personIds.includes(personId)) {
+    throw Boom.notFound(`person ${personId} is not currently authorised on organisation ${orgId}`)
+  }
+
+  let person
+  try {
+    person = retrievePerson(personId)
+  } catch {
+    throw Boom.notFound(`person with personId ${personId} not found`)
+  }
+
+  const personRoles = payload?.personRoles ?? []
+  // For the single-person update we still accept the same shape but only act on the matching personId
+  const match = personRoles.find((pr) => String(pr.personId) === String(personId)) ?? personRoles[0]
+
+  if (match) {
+    if (match.role !== undefined) person.role = match.role
+    const privs = match.personPrivileges?.[0]?.privilegeNames ?? match.privilegeNames ?? undefined
+    if (privs !== undefined) person.privileges = privs
+  }
+
+  return {
+    personId,
+    role: person.role,
+    privileges: person.privileges
+  }
+}

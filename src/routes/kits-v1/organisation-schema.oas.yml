@@ -244,6 +244,97 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApplicationError'
+  /SitiAgriApi/authorisation/organisation/{orgId}/authorisation:
+    post:
+      tags:
+        - 'organisation'
+        - 'authorisation'
+      summary: 'Add a person to a business (create authorisation).'
+      description: 'Link an existing person (by CRN/personId) to an organisation with role and privileges.'
+      operationId: 'createAuthorisation'
+      parameters:
+        - name: 'orgId'
+          in: 'path'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorisationCreateRequest'
+      responses:
+        '201':
+          description: 'Authorisation created.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _data:
+                    type: array
+                    items:
+                      type: object
+        '400':
+          description: 'Invalid payload'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: 'CV users are not permitted to create authorisations.'
+        '404':
+          description: 'Organisation or person not found.'
+        '409':
+          description: 'Person already authorised on the organisation.'
+
+  /SitiAgriApi/authorisation/organisation/{orgId}/authorisation/person/{personId}:
+    put:
+      tags:
+        - 'organisation'
+        - 'authorisation'
+      summary: "Update a person's authorisation on a business."
+      description: 'Change role and/or privileges for an existing person-organisation link.'
+      operationId: 'updateAuthorisation'
+      parameters:
+        - name: 'orgId'
+          in: 'path'
+          required: true
+          schema:
+            type: integer
+        - name: 'personId'
+          in: 'path'
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorisationUpdateRequest'
+      responses:
+        '200':
+          description: 'Authorisation updated.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _data:
+                    type: object
+        '400':
+          description: 'Invalid payload'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '403':
+          description: 'CV users are not permitted to update authorisations.'
+        '404':
+          description: 'Organisation, person, or authorisation link not found.'
+
 components:
   schemas:
     # request objects
@@ -364,6 +455,29 @@ components:
                 - type: string
                 - type: 'null'
           required: ['partyNoteType', 'note']
+    AuthorisationCreateRequest:
+      type: object
+      properties:
+        personRoles:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+              personId:
+                type: integer
+              personPrivileges:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    privilegeNames:
+                      type: array
+                      items:
+                        type: string
+    AuthorisationUpdateRequest:
+      $ref: '#/components/schemas/AuthorisationCreateRequest'
     UnlockRequestBody:
       type: object
       examples:

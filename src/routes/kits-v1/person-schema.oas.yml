@@ -388,9 +388,9 @@ components:
             - type: integer
               format: int64
               minimum: -999999999999999
-              maximum: 999999999999
+              maximum: 9999999999999
             - type: string
-              pattern: '^(-[0-9]{1,15}$|^[0-9]{1,12})?$'
+              pattern: '^(-[0-9]{1,15}$|^[0-9]{1,13})?$'
             - type: 'null'
         landline:
           oneOf:

@@ -297,5 +297,30 @@ describe('Person routes', () => {
         message: 'validation error while processing input'
       })
     })
+
+    test('should accept a dateOfBirth returned by GET /person/{personId}/summary', async () => {
+      // Regression: the schema previously capped dateOfBirth at 999999999999 (2001-09-09),
+      // causing PUT to reject values the GET endpoint itself returned for post-2001 dates.
+      const { result: personFixture } = await server.inject({
+        method: 'GET',
+        url: '/person/11111119/summary'
+      })
+
+      const { dateOfBirth } = personFixture._data
+      expect(dateOfBirth).toBeGreaterThan(999999999999)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: {
+          firstName: personFixture._data.firstName,
+          lastName: personFixture._data.lastName,
+          dateOfBirth
+        }
+      })
+
+      expect(statusCode).toBe(204)
+    })
   })
 })

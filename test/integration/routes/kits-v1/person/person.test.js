@@ -298,9 +298,7 @@ describe('Person routes', () => {
       })
     })
 
-    test('should accept a dateOfBirth returned by GET /person/{personId}/summary', async () => {
-      // Regression: the schema previously capped dateOfBirth at 999999999999 (2001-09-09),
-      // causing PUT to reject values the GET endpoint itself returned for post-2001 dates.
+    test('should accept a post-2001 dateOfBirth returned by GET', async () => {
       const { result: personFixture } = await server.inject({
         method: 'GET',
         url: '/person/11111119/summary'
@@ -308,6 +306,7 @@ describe('Person routes', () => {
 
       const { dateOfBirth } = personFixture._data
       expect(dateOfBirth).toBeGreaterThan(999999999999)
+      expect(dateOfBirth).toBeLessThan(Date.now())
 
       const { statusCode } = await server.inject({
         method: 'PUT',
@@ -321,6 +320,103 @@ describe('Person routes', () => {
       })
 
       expect(statusCode).toBe(204)
+    })
+
+    test('should reject a dateOfBirth that is tomorrow or later', async () => {
+      const tomorrow = Date.now() + 86400000
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: {
+          firstName: 'Test',
+          lastName: 'User',
+          dateOfBirth: tomorrow
+        }
+      })
+
+      expect(statusCode).toBe(422)
+    })
+
+    // Oracle RR year windowing: years 0-49 become 2000+year, years 50-99 become 1900+year.
+    // The "must be in the past" check runs AFTER windowing.
+
+    test('year 0001 is windowed to 2001 and accepted (in the past)', async () => {
+      const date = new Date('0001-04-05T00:00:00.000Z')
+      date.setUTCFullYear(1)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: { firstName: 'Test', lastName: 'User', dateOfBirth: date.getTime() }
+      })
+      expect(statusCode).toBe(204)
+
+      const { result } = await server.inject({ method: 'GET', url: '/person/11111119/summary' })
+      expect(new Date(result._data.dateOfBirth).getUTCFullYear()).toBe(2001)
+    })
+
+    test('year 0026 is windowed to 2026 and accepted if before today', async () => {
+      const date = new Date('0026-01-01T00:00:00.000Z')
+      date.setUTCFullYear(26)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: { firstName: 'Test', lastName: 'User', dateOfBirth: date.getTime() }
+      })
+      expect(statusCode).toBe(204)
+
+      const { result } = await server.inject({ method: 'GET', url: '/person/11111119/summary' })
+      expect(new Date(result._data.dateOfBirth).getUTCFullYear()).toBe(2026)
+    })
+
+    test('year 0049 is windowed to 2049 and rejected (in the future)', async () => {
+      const date = new Date('0049-04-05T00:00:00.000Z')
+      date.setUTCFullYear(49)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: { firstName: 'Test', lastName: 'User', dateOfBirth: date.getTime() }
+      })
+      expect(statusCode).toBe(422)
+    })
+
+    test('year 0050 is windowed to 1950 and accepted (in the past)', async () => {
+      const date = new Date('0050-04-05T00:00:00.000Z')
+      date.setUTCFullYear(50)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: { firstName: 'Test', lastName: 'User', dateOfBirth: date.getTime() }
+      })
+      expect(statusCode).toBe(204)
+
+      const { result } = await server.inject({ method: 'GET', url: '/person/11111119/summary' })
+      expect(new Date(result._data.dateOfBirth).getUTCFullYear()).toBe(1950)
+    })
+
+    test('year 0099 is windowed to 1999 and accepted (in the past)', async () => {
+      const date = new Date('0099-04-05T00:00:00.000Z')
+      date.setUTCFullYear(99)
+
+      const { statusCode } = await server.inject({
+        method: 'PUT',
+        url: '/person/11111119',
+        headers: { email: 'test@defra.gov.uk' },
+        payload: { firstName: 'Test', lastName: 'User', dateOfBirth: date.getTime() }
+      })
+      expect(statusCode).toBe(204)
+
+      const { result } = await server.inject({ method: 'GET', url: '/person/11111119/summary' })
+      expect(new Date(result._data.dateOfBirth).getUTCFullYear()).toBe(1999)
     })
   })
 })

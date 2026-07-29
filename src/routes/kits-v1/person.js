@@ -44,6 +44,21 @@ const mapPersonToSearchResult = ({
   deactivated
 })
 
+// Emulates Oracle's RR year windowing: years 0-49 become 2000-2049, years 50-99 become 1950-1999
+const applyOracleYearWindowing = (timestamp) => {
+  const date = new Date(timestamp)
+  const year = date.getUTCFullYear()
+  if (year >= 0 && year <= 49) {
+    date.setUTCFullYear(year + 2000)
+    return date.getTime()
+  }
+  if (year >= 50 && year <= 99) {
+    date.setUTCFullYear(year + 1900)
+    return date.getTime()
+  }
+  return timestamp
+}
+
 const validateUpdatePersonPayload = await createPayloadValidator(
   'routes/kits-v1/person-schema.oas.yml',
   (schema) => schema.paths['/person/{personId}'].put.requestBody.content['application/json'].schema
@@ -132,6 +147,14 @@ export const person = [
 
       if (!validateUpdatePersonPayload(request.payload)) {
         throw Boom.badData('validation error while processing input', request)
+      }
+
+      const dob = body.dateOfBirth != null ? Number(body.dateOfBirth) : null
+      if (dob != null) {
+        body.dateOfBirth = applyOracleYearWindowing(dob)
+        if (body.dateOfBirth >= Date.now()) {
+          throw Boom.badData('validation error while processing input', request)
+        }
       }
 
       updatePerson(personId, body)

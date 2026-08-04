@@ -218,6 +218,7 @@ describe('Person routes', () => {
         firstName: 'test-first-name',
         middleName: 'test-middle-name',
         lastName: 'test-last-name',
+        // Input as seconds
         dateOfBirth: -2,
         landline: '01234 567890',
         mobile: '07111 222333',
@@ -257,7 +258,11 @@ describe('Person routes', () => {
         headers: {
           email: 'test@defra.gov.uk'
         },
-        payload: { ...payload, address: { ...payload.address, extra: 'chuff' }, more: 'jazz' }
+        payload: {
+          ...payload,
+          address: { ...payload.address, extra: 'chuff' },
+          more: 'jazz'
+        }
       })
       expect(response.statusCode).toBe(204)
       expect(response.payload).toBe('')
@@ -270,6 +275,8 @@ describe('Person routes', () => {
       expect(updated.statusCode).toBe(200)
       expect(updated.result._data).toEqual({
         ...payload,
+        // Output as milliseconds
+        dateOfBirth: -2000,
         // data which should not be updated remains the same
         customerReferenceNumber: personFixture._data.customerReferenceNumber,
         emailValidated: personFixture._data.emailValidated,
@@ -297,5 +304,36 @@ describe('Person routes', () => {
         message: 'validation error while processing input'
       })
     })
+
+    test.each([
+      [1735689600, 1735689600000, 'positive number'],
+      [-1735689600, -1735689600000, 'negative number'],
+      ['1735689600', 1735689600000, 'positive string'],
+      ['-1735689600', -1735689600000, 'negative string']
+    ])(
+      'should convert dateOfBirth from seconds to milliseconds on PUT (%s)',
+      async (input, expected, description) => {
+        // fetch current state so we send a complete valid payload
+        const { result: current } = await server.inject({
+          method: 'GET',
+          url: '/person/11111111/summary'
+        })
+
+        const putResponse = await server.inject({
+          method: 'PUT',
+          url: '/person/11111111',
+          headers: { email: 'test@defra.gov.uk' },
+          payload: { ...current._data, dateOfBirth: input }
+        })
+        expect(putResponse.statusCode).toBe(204)
+
+        const getResponse = await server.inject({
+          method: 'GET',
+          url: '/person/11111111/summary'
+        })
+        expect(getResponse.statusCode).toBe(200)
+        expect(getResponse.result._data.dateOfBirth).toBe(expected)
+      }
+    )
   })
 })

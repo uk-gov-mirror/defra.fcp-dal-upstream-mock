@@ -134,6 +134,16 @@ export const person = [
         throw Boom.badData('validation error while processing input', request)
       }
 
+      // Convert dateOfBirth from seconds (DAL) to milliseconds (stored format).
+      // The schema allows integer, string, or null; integers/strings may be negative (pre-1970).
+      const rawDob = body.dateOfBirth
+      if (rawDob != null) {
+        const secs = Number(rawDob)
+        if (Number.isFinite(secs)) {
+          body.dateOfBirth = secs * 1000
+        }
+      }
+
       updatePerson(personId, body)
       return h.response().code(204)
     }

@@ -6,15 +6,20 @@ export const faker = fakerEN_GB
 // https://fakerjs.dev/api/faker#setdefaultrefdate:~:text=faker.setDefaultRefDate()%3A%20For%20generating%20reproducible%20dates.
 faker.setDefaultRefDate(new Date('2025-01-01'))
 
-const intOrValue = (value) => {
+// faker.seed only accepts numbers, so non-numeric seeds (e.g. permission
+// function names) are hashed to a stable integer.
+const hashString = (str) =>
+  [...str].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 2147483647, 7)
+
+const intOrHash = (value) => {
   const integer = Number.parseInt(value, 10)
-  return Number.isNaN(integer) ? value : integer
+  return Number.isNaN(integer) ? hashString(`${value}`) : integer
 }
 export const safeSeed = (seed) => {
   if (Array.isArray(seed)) {
-    return faker.seed(seed.map((s) => intOrValue(s)))
+    return faker.seed(seed.map((s) => intOrHash(s)))
   }
-  return faker.seed(intOrValue(seed))
+  return faker.seed(intOrHash(seed))
 }
 
 export const fakeAddress = (overrides = {}) => ({

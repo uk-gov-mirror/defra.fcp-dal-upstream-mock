@@ -1,0 +1,240 @@
+openapi: 3.1.0
+info:
+  title: SitiAgri Authorisation (Permissions) API
+  description: >
+    API for retrieving the operations (functions) an external user is authorised to perform for a
+    particular business. Consumers use the response to show/hide functionality in their UI.
+    NOTE: DAL does not enforce these permissions - the upstream systems do.
+  version: '1.0.0'
+  license:
+    name: 'Open Government Licence v3.0'
+    url: 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3'
+security:
+  - mTLS: []
+servers:
+  - url: 'https://chs-upgrade-api.ruraldev.org.uk:8446/extapi'
+    description: 'The test server for KITS/V1 APIs'
+tags:
+  - name: 'authorisation'
+    description: 'Operations related to external user authorisation'
+paths:
+  /SitiAgriApi/authorisation/organisation/{orgId}/byFunction:
+    get:
+      tags:
+        - 'authorisation'
+        - 'permissions'
+      summary: 'Get authorised functions for an external user for a business.'
+      description: >
+        Returns, for each requested function, whether the external user is authorised to perform it
+        for the specified organisation. The consuming service supplies the pipe-separated list of
+        functions it is interested in via the `functions` query parameter, e.g.
+        `.../organisation/{orgId}/byFunction?functions=viewLand|amendBusinessDetails&module=CUST_SS_PORTAL&timestamp=1720000000000`.
+      operationId: 'getAuthorisationByFunction'
+      parameters:
+        - name: 'orgId'
+          in: 'path'
+          description: 'Organisation id the external user is acting on behalf of.'
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            examples:
+              - 5583781
+              - 5849659
+              - 5852711
+        - name: 'functions'
+          in: 'query'
+          description: >
+            Pipe-separated list of the functions to return an authorisation flag for. The upstream
+            does not validate the value - any unrecognised (or empty) function name is simply
+            echoed back with a `false` flag.
+          required: true
+          schema:
+            type: string
+            examples:
+              - 'viewLand|amendBusinessDetails'
+              - 'viewApplication|viewEntitlements|amendEntitlements'
+        - name: 'module'
+          in: 'query'
+          description: >
+            The consuming module; `CUST_SS_PORTAL` for the self-service portal. The upstream does
+            not validate the value - an unrecognised module simply returns `false` for every
+            requested function.
+          required: true
+          schema:
+            type: string
+            examples:
+              - 'CUST_SS_PORTAL'
+        - name: 'timestamp'
+          in: 'query'
+          description: >
+            Request timestamp as epoch milliseconds. Callers are expected to supply it, but the
+            upstream does not require (or validate) it.
+          required: false
+          schema:
+            type: string
+            examples:
+              - '1720000000000'
+      responses:
+        '200':
+          description: Returns the requested functions mapped to their authorised boolean.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorisationByFunctionResponse'
+        '400':
+          description: >
+            The request was rejected before reaching the service, e.g. by the upstream WAF
+            (typically as an empty-bodied 400).
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: >
+            Getting authorisation data is forbidden, or a WAF rule has been triggered, or the orgId
+            was not a valid integer (i.e. 404!). When the authenticated user has no relationship
+            with the requested orgId, the service responds with a JSON error envelope
+            (e.g. errorString "Parent user id not found").
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: >
+            Returned by the service (as its JSON error envelope, errorString "An error has
+            occurred.") whenever the `functions` or `module` query parameter is omitted - the
+            upstream 500s instead of returning a proper 400 for these bad requests. This is the
+            only known trigger; all other malformed input is accepted with a 200 (see the
+            parameter descriptions) or rejected with a 403 (bad `orgId`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad Request response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 400
+              message:
+                type: string
+                example: 'HTTP 400 Bad Request'
+        text/plain:
+          schema:
+            type: string
+            example: ''
+        text/html:
+          schema:
+            type: string
+          examples:
+            badRequest:
+              summary: Bad Request HTML response
+              value: |
+                <html><body><h1>400 Bad request</h1>
+                Your browser sent an invalid request.
+                </body></html>
+    Forbidden:
+      description: Forbidden response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            noRelationship:
+              summary: The user has no relationship with the requested organisation
+              value:
+                data: null
+                success: false
+                errorString: 'Parent user id not found'
+        text/html:
+          schema:
+            type: string
+          examples:
+            forbidden:
+              summary: Forbidden HTML response
+              value: |
+                <html><body><h1>403 Forbidden</h1>
+                Request forbidden by administrative rules.
+                </body></html>
+
+  schemas:
+    AuthorisationByFunctionResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: >
+            A map of requested function name to a boolean indicating whether the external user is
+            authorised to perform it. Only the functions requested via `byFunction` are returned,
+            so every property is optional. The recognised external-user functions are listed
+            below.
+          properties:
+            addOrRemoveOrTransferLand: { type: boolean }
+            addRoleOrPrivilege: { type: boolean }
+            amendApplication: { type: boolean }
+            amendBankAccountDetails: { type: boolean }
+            amendBusinessDetails: { type: boolean }
+            amendControlledBusinessInfo: { type: boolean }
+            amendELMApplications: { type: boolean }
+            amendEntitlements: { type: boolean }
+            amendLegallyResponsiblePeople: { type: boolean }
+            amendNewYoungFarmerProcess: { type: boolean }
+            applyForBPS: { type: boolean }
+            closeBusiness: { type: boolean }
+            confirmBusiness: { type: boolean }
+            deleteBusiness: { type: boolean }
+            modifyRoleOrPrivilege: { type: boolean }
+            removeRoleOrPrivilege: { type: boolean }
+            submitApplication: { type: boolean }
+            submitELMApplications: { type: boolean }
+            updateLandUse: { type: boolean }
+            viewApplication: { type: boolean }
+            viewBusinessBankAccount: { type: boolean }
+            viewBusinessDetails: { type: boolean }
+            viewCPH: { type: boolean }
+            viewCSAgreements: { type: boolean }
+            viewCSApplications: { type: boolean }
+            viewCSClaims: { type: boolean }
+            viewCountrysideStewardship: { type: boolean }
+            viewELMApplications: { type: boolean }
+            viewEntitlements: { type: boolean }
+            viewLand: { type: boolean }
+            viewLegallyResponsiblePeople: { type: boolean }
+          # the pipe-separated list is caller-supplied, so unrecognised functions may be echoed back
+          additionalProperties:
+            type: boolean
+        errorString:
+          type: [string, 'null']
+        success:
+          type: boolean
+      required:
+        - data
+        - errorString
+        - success
+      additionalProperties: false
+    ErrorResponse:
+      description: >
+        The service's JSON error envelope - the same wrapper as a success response, but with
+        `data` nulled, `success` false and the reason in `errorString`.
+      type: object
+      properties:
+        data:
+          type: 'null'
+        errorString:
+          type: string
+        success:
+          type: boolean
+      required:
+        - data
+        - errorString
+        - success
+      additionalProperties: false
+
+  securitySchemes:
+    mTLS:
+      type: mutualTLS
+      description: >
+        Mutual TLS authentication. Client must present a certificate issued by the server.

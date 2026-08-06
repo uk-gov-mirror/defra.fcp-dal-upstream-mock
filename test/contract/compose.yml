@@ -8,7 +8,7 @@ services:
       - -c
       - |
         result=0
-        for schema in person organisation authenticate siti-agri land bank reference-data payments ; do
+        for schema in person organisation authenticate siti-agri land bank reference-data permissions payments ; do
           echo "Running contract tests for schema: $${schema}"
           auth_header="email: $${TEST_USER_EMAIL:-testuser01@defra.gov.uk}"
           if [ "$${schema}" = "payments" ]; then auth_header='Authorization: bearer token'; fi

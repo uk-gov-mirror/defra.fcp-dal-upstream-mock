@@ -39,6 +39,13 @@ export const schemata = {
         },
         {
           method: 'GET',
+          path: '/schemata/permissions.yml',
+          handler: {
+            file: path.join(__dirname, '../routes/kits-v1/permissions-schema.oas.yml')
+          }
+        },
+        {
+          method: 'GET',
           path: '/schemata/land.yml',
           handler: {
             file: path.join(__dirname, '../routes/kits-v1/land-schema.oas.yml')

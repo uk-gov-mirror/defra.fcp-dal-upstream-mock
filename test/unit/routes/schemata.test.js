@@ -9,7 +9,7 @@ describe('Fake Person', () => {
     await server.register([inert, schemata])
     await server.initialize()
   })
-  ;['authenticate', 'person', 'organisation', 'siti-agri'].forEach((schema) => {
+  ;['authenticate', 'person', 'organisation', 'siti-agri', 'permissions'].forEach((schema) => {
     it(`should fetch the ${schema} schema file`, async () => {
       const result = await server.inject({
         method: 'GET',

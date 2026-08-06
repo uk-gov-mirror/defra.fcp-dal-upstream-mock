@@ -25,7 +25,7 @@ test/contract/check-schema.sh help
 
 ```shell
 export CDP_API_KEY=[KEY GENERATED ABOVE]
-export KITS_URL=https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/internal/extapi
+export KITS_INTERNAL_URL=https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/internal/extapi
 test/contract/check-schema.sh person
 ```
 

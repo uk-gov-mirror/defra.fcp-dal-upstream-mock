@@ -10,10 +10,10 @@ mkdir -p ./tmp
 usage() {
   set +x
   echo
-  echo "Run schemathesis contract tests against the upstream KITS."
+  echo "Run schemathesis contract tests against the upstream KITS (internal or external gateway) or Hitachi."
   echo "All tests are run against the 'upgrade' API env."
   echo
-  echo "Usage: $0 {a|auth|authenticate|b|bank|o|org|organisation|p|person|r|rd|reference-data|s|sa|siti-agri|help}"
+  echo "Usage: $0 {a|auth|authenticate|b|bank|l|land|o|org|organisation|p|person|perm|permissions|r|rd|reference-data|pd|payments|s|sa|siti-agri|help}"
   echo
   echo "Where the argument specifies which schema to test:"
   echo "  a  | auth | authenticate - test the Authenticate schema"
@@ -21,6 +21,7 @@ usage() {
   echo "  l  | land                - test the Land schema"
   echo "  o  | org | organisation  - test the Organisation schema"
   echo "  p  | person              - test the Person schema"
+  echo "  perm | permissions       - test the Authorisation (Permissions) schema (KITS EXTERNAL gateway)"
   echo "  r  | rd | reference-data - test the Reference Data schema"
   echo "  pd | payments            - test the Payment Details schema"
   echo "  s  | sa | siti-agri      - test the Siti-Agri schema"
@@ -28,19 +29,58 @@ usage() {
   echo
   echo "NOTE: additionally the following environment variables must be set:"
   echo "  CDP_API_KEY - CDP Platform developer API key "
-  echo "  KITS_URL  - the URL of the KITS API to use (this should be the DAL Mock proxy endpoint, via the ephemeral endpoint)"
+  echo "  KITS_INTERNAL_URL  - the URL of the KITS API to use (this should be the DAL Mock proxy endpoint, via the ephemeral endpoint)"
+  echo "  CDP_API_KEY    - CDP Platform developer API key"
+  echo "  DEFRA_ID_TOKEN - a pre-issued Defra Identity token; if unset one is generated"
+  echo "                   with scripts/get-defra-id-token.js, which needs CRN,"
+  echo "                   DEFRA_ID_PASSWORD and the DEFRA_ID_* client config (see .env.example)"
+  echo "  KITS_EXTERNAL_URL - the URL of the KITS EXTERNAL proxy endpoint (defaults to"
+  echo "                      the deployed mock's /proxy/external/extapi ephemeral route)"
   echo "or..."
   echo "  HITACHI_CLIENT_SECRET - the client secret for token generation"
 }
 
+cleanup() {
+  local status=$?
+  if [ ${status} -ne 0 ] && [ -f "${baseDir}/tmp/vcr.yaml" ]; then
+    echo "NOTE: report from the failed run left at ${baseDir}/tmp/vcr.yaml" 1>&2
+    return
+  fi
+  rm -rf "${baseDir}/tmp"
+}
+trap cleanup EXIT
+
+# Resolve the Defra ID token (generating one if needed) and default CRN/ORG_ID from
+# its claims.
+resolve_defra_id_token() {
+  if [ -z "${DEFRA_ID_TOKEN}" ]; then
+    if [ -z "${CRN}" ]; then
+      echo "ERROR: CRN (plus DEFRA_ID_PASSWORD and the DEFRA_ID_* config) must be set to generate a Defra Identity token" 1>&2
+      usage
+      exit 1
+    fi
+    echo "Generating a Defra Identity token for the external gateway..."
+    DEFRA_ID_TOKEN=$( node "${rootDir}/scripts/get-defra-id-token.js" )
+    if [ -z "${DEFRA_ID_TOKEN}" ]; then
+      echo "ERROR: DEFRA_ID_TOKEN was not generated correctly" 1>&2
+      usage
+      exit 1
+    fi
+  fi
+  claim() {
+    node -p 'JSON.parse(Buffer.from(process.argv[2].split(".")[1], "base64url").toString())[process.argv[1]] ?? ""' "$1" "${DEFRA_ID_TOKEN}"
+  }
+  CRN="${CRN:-$( claim contactId )}"
+  ORG_ID="${ORG_ID:-$( claim currentRelationshipId )}"
+}
+
 # check OPTION argument
-kits=false
 case "$1" in
   h | help | --help | -h )
     usage
     exit 0
     ;;
-  # KITS APIs
+  # KITS APIs (internal gateway)
   b | bank )
     schema="kits-v1/bank"
     mutations='. |
@@ -58,13 +98,13 @@ case "$1" in
 .paths["/bank-change-service/v1/locked-status/{organisationId}/{personId}"].get.parameters[1].schema.examples = ["5020949"] |
 .paths["/bank-change-service/v1/account-status/{organisationId}"].get.parameters[0].schema.examples = ["5583781"] |
 .paths["/bank-change-service/v1/existing-accounts/{frn}"].get.parameters[0].schema.examples = ["10014489653"]'
-    kits=true
+    gateway="kits-internal"
     ;;
   a | auth | authenticate )
     schema="kits-v1/authenticate"
     mutations='. |
 .paths["/external-auth/security-answers/{crn}"].get.parameters[0].schema.examples = [1105739979,1106046692,1106077237,1100932879,1105430162]'
-    kits=true
+    gateway="kits-internal"
     ;;
   l | land )
     schema="kits-v1/land"
@@ -74,7 +114,7 @@ case "$1" in
 .components.parameters.parcelId.schema.examples = ["3227"] |
 .components.parameters.historicDate.schema.examples = ["19-Jul-24"] |
 .paths["/lms/organisation/{organisationId}/parcel/sheet-id/{sheetId}/parcel-id/{parcelId}/historic/{historicDate}/land-covers"].get.parameters[4].schema.examples = [true, false]'
-    kits=true
+    gateway="kits-internal"
     ;;
   o | org | organisation )
     schema="kits-v1/organisation"
@@ -87,7 +127,7 @@ case "$1" in
 .components.schemas.SearchRequestBody.examples[4].primarySearchPhrase = "YO18 8RL" |
 .paths["/organisation/{organisationId}/lock"].post.parameters[0].schema.examples = [5583781,5849659,5852711,5858233] |
 .paths["/organisation/{organisationId}/unlock"].post.parameters[0].schema.examples = [5583781,5849659,5852711,5858233]'
-    kits=true
+    gateway="kits-internal"
     ;;
   p | person )
     schema="kits-v1/person"
@@ -101,12 +141,12 @@ case "$1" in
 .components.schemas.SearchRequestBody.examples[5].primarySearchPhrase = "EX14 2XA" |
 .components.schemas.SearchRequestBody.examples[6].primarySearchPhrase = "123456" |
 .components.schemas.SearchRequestBody.examples[7].primarySearchPhrase = "123456"'
-    kits=true
+    gateway="kits-internal"
     ;;
   r | rd | reference-data )
     schema="kits-v1/reference-data"
     mutations='.'
-    kits=true
+    gateway="kits-internal"
     ;;
   s | sa | siti-agri )
     schema="kits-v1/siti-agri"
@@ -117,13 +157,22 @@ case "$1" in
 .paths["/SitiAgriApi/cv/landUseByBusinessParcel/sheet/{sheet}/parcel/{parcel}/sbi/{sbi}/list"].get.parameters[0].schema.examples = ["SS6528","S60869","S15653"] |
 .paths["/SitiAgriApi/cv/landUseByBusinessParcel/sheet/{sheet}/parcel/{parcel}/sbi/{sbi}/list"].get.parameters[1].schema.examples = [3756,8463,7211] |
 .paths["/SitiAgriApi/cv/landUseByBusinessParcel/sheet/{sheet}/parcel/{parcel}/sbi/{sbi}/list"].get.parameters[2].schema.examples = [107183280]'
-    kits=true
+    gateway="kits-internal"
+    ;;
+  # KITS APIs (EXTERNAL gateway)
+  perm | permissions )
+    schema="kits-v1/permissions"
+    resolve_defra_id_token
+    mutations='. |
+.paths["/SitiAgriApi/authorisation/organisation/{orgId}/byFunction"].get.parameters[0].schema.examples = ['"${ORG_ID:-5583781}"']'
+    gateway="kits-external"
     ;;
   # Hitachi API
   pd | payments )
     schema="hitachi/payments"
     mutations='. |
 .components.schemas.PaymentsRequest.properties.payment.properties.SupplierAccount.examples = ["5411707635","5305137528","4002722019"]'
+    gateway="hitachi"
     ;;
   *)
     echo "ERROR: Invalid argument: $1" 1>&2
@@ -136,7 +185,7 @@ yq eval -o=json -- "${mutations}" ${rootDir}/src/routes/${schema}-schema.oas.yml
   | tee ./tmp/schema.json > /dev/null
 
 # run schemathesis tests
-if ${kits} ; then # KITS gateway
+if [ "${gateway}" = "kits-internal" ]; then # KITS internal gateway
   if [ -z "${CDP_API_KEY}" ]; then
     echo "ERROR: CDP_API_KEY environment variable is not set" 1>&2
     usage
@@ -153,7 +202,34 @@ if ${kits} ; then # KITS gateway
         --header "x-api-key: ${CDP_API_KEY}" \
         --exclude-checks=unsupported_method,not_a_server_error \
         --report-vcr-path /tmp/vcr.yaml \
-        --url "${KITS_URL:-https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/internal/extapi}"
+        --url "${KITS_INTERNAL_URL:-https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/internal/extapi}"
+
+elif [ "${gateway}" = "kits-external" ]; then # KITS EXTERNAL gateway
+  if [ -z "${CDP_API_KEY}" ]; then
+    echo "ERROR: CDP_API_KEY environment variable is not set" 1>&2
+    usage
+    exit 1
+  fi
+  if [ -z "${CRN}" ]; then
+    echo "ERROR: CRN is not set and could not be derived from the Defra ID token" 1>&2
+    usage
+    exit 1
+  fi
+
+  # NOTE: endpoint-specific check exclusions are configured in schemathesis.toml
+  # NOTE: the KITS external gateway expects the RAW Defra ID JWT in Authorization without `Bearer` prefix
+  docker run --rm --network=host --pull always \
+    -v ${baseDir}/tmp:/tmp \
+    -v ${baseDir}/schemathesis.toml:/tmp/schemathesis.toml:ro \
+    schemathesis/schemathesis:stable \
+      --config-file /tmp/schemathesis.toml \
+      run /tmp/schema.json \
+        --header "x-api-key: ${CDP_API_KEY}" \
+        --header "Authorization: ${DEFRA_ID_TOKEN}" \
+        --header "crn: ${CRN}" \
+        --exclude-checks=unsupported_method,not_a_server_error \
+        --report-vcr-path /tmp/vcr.yaml \
+        --url "${KITS_EXTERNAL_URL:-https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/external/extapi}"
 
 else # hitachi
   if [ -z "${HITACHI_CLIENT_SECRET}" ]; then
@@ -187,6 +263,3 @@ else # hitachi
         --report-vcr-path /tmp/vcr.yaml \
         --url "${HITACHI_URL:-https://orgcf202fa2.operations.eu.dynamics.com/api}"
 fi
-
-# cleanup
-rm -rf ./tmp

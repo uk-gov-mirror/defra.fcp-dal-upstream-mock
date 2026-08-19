@@ -15,6 +15,53 @@ servers:
   - url: 'https://chs-upgrade-api.ruraldev.org.uk:8446/extapi'
     description: The test server for KITS/V1 APIs
 paths:
+  /person/{email}/validateEmail:
+    get:
+      tags:
+        - 'person'
+      summary: 'Validates emails'
+      description: 'Returns a boolean to indicate if the email is duplicated'
+      operationId: 'isEmailDuplicated'
+      parameters:
+        - name: 'email'
+          in: 'path'
+          description: 'email'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: "successfully returns a flag to indicate if the email is\
+            \ duplicate. Returns result inside CapdResponse"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _data:
+                    type: object
+                    properties:
+                      emailDuplicated:
+                        type: boolean
+                    required:
+                      - 'emailDuplicated'
+                    additionalProperties: false
+                required:
+                  - '_data'
+                additionalProperties: false
+        '500':
+          description: 'Error confirming if email is duplicated'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 500
+                  message:
+                    type: string
+                    example: 'There was an error processing your request.'
   /person/{personId}/summary:
     get:
       tags:

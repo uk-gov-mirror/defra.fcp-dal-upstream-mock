@@ -14,6 +14,58 @@ describe('Person routes', () => {
     ])
   })
 
+  describe('GET /person/{email}/validateEmail', () => {
+    it('should report a known email as duplicated, conforming to the schema', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/person/skeleton@the-closet.net/validateEmail'
+      })
+      expect(statusCode).toBe(200)
+      expect(result).toEqual({ _data: { emailDuplicated: true } })
+      expect(result).toConformToSchema(
+        schema.paths['/person/{email}/validateEmail'].get.responses['200'].content[
+          'application/json'
+        ].schema
+      )
+    })
+
+    it('should report an unknown email as not duplicated', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/person/nobody-with-this-address@example.com/validateEmail'
+      })
+      expect(statusCode).toBe(200)
+      expect(result).toEqual({ _data: { emailDuplicated: false } })
+    })
+
+    it('should be case-insensitive when matching emails', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/person/SKELETON@THE-CLOSET.NET/validateEmail'
+      })
+      expect(statusCode).toBe(200)
+      expect(result).toEqual({ _data: { emailDuplicated: true } })
+    })
+
+    it('should URL-decode the email path parameter', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: `/person/${encodeURIComponent('skeleton@the-closet.net')}/validateEmail`
+      })
+      expect(statusCode).toBe(200)
+      expect(result).toEqual({ _data: { emailDuplicated: true } })
+    })
+
+    it('should not error when static fixtures have a null email', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/person/3010085@example.com/validateEmail'
+      })
+      expect(statusCode).toBe(200)
+      expect(result).toEqual({ _data: { emailDuplicated: false } })
+    })
+  })
+
   it('should GET a person conforming to the schema', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',

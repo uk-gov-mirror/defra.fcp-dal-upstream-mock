@@ -3,6 +3,7 @@ import { config } from '../../config.js'
 import { paginate } from '../../factories/common.js'
 import { crnToPersonId } from '../../factories/id-lookups.js'
 import {
+  allPeople,
   retrievePerson,
   retrievePersonOrgs,
   searchPeople,
@@ -63,6 +64,15 @@ const checkPersonId = (request) => {
 }
 
 export const person = [
+  {
+    method: 'GET',
+    path: '/person/{email}/validateEmail',
+    handler: async (request, h) => {
+      const email = request.params.email.toLowerCase()
+      const emailDuplicated = allPeople().some((person) => person.email?.toLowerCase() === email)
+      return h.response({ _data: { emailDuplicated } })
+    }
+  },
   {
     method: 'GET',
     path: '/person/{personId}/summary',

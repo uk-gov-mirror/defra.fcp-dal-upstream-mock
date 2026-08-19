@@ -100,7 +100,8 @@ export const retrievePersonOrgs = (personId) => {
   return orgs
 }
 
-const allPeople = () => Object.keys(staticPersonData).map((personId) => retrievePerson(personId))
+export const allPeople = () =>
+  Object.keys(staticPersonData).map((personId) => retrievePerson(personId))
 
 // find all the people belonging to orgs matching the search function
 const peopleInOrgsWhere = (search) => {

@@ -21,7 +21,8 @@
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module",
     "test:contract": "docker compose -f compose.yml -f test/contract/compose.yml run --quiet-pull --pull always --build --rm contract-tests",
     "verify:schemata": "redocly lint src/routes/**/*-schema*.yml",
-    "test:contract:local": "dotenv -- ./test/contract/check-schema.sh"
+    "test:contract:local": "dotenv -- ./test/contract/check-schema.sh",
+    "generate:defraid-token": "dotenv -e .env -- node scripts/get-defra-id-token.js"
   },
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
@@ -45,14 +46,12 @@
   "devDependencies": {
     "@redocly/cli": "1.29.0",
     "@vitest/coverage-v8": "4.1.9",
-    "acorn": "^8.16.0",
     "dotenv-cli": "^10.0.0",
     "eslint": "^9.32.0",
     "eslint-plugin-import": "^2.31.0",
     "globals": "^17.7.0",
     "got": "^15.1.0",
     "husky": "^9.1.6",
-    "node-html-parser": "^9.0.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
     "tough-cookie": "^6.0.2",

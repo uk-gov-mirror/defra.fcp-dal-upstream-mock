@@ -14,6 +14,8 @@ Core delivery platform Node.js Backend Template.
   - [Formatting](#formatting)
     - [Windows prettier issue](#windows-prettier-issue)
 - [API endpoints](#api-endpoints)
+- [Schema testing against the KITS upgrade service](#schema-testing-against-the-kits-upgrade-service)
+  - [Testing against the external (Defra Identity) upstream](#testing-against-the-external-defra-identity-upstream)
 - [Docker](#docker)
   - [Development image](#development-image)
   - [Production image](#production-image)
@@ -162,6 +164,33 @@ to the KITS service, allowing schema verification. Access to this API is via the
 You can then access the proxy as shown in the following example
 
 > curl --header 'x-api-key: {API-KEY}' --header 'email: {EMAIL-ADDRESS}' https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/internal/extapi/person/3010037/summary
+
+### Testing against the external (Defra Identity) upstream
+
+The KITS **external** gateway (used by e.g. the permissions endpoints) authenticates with a Defra Identity token
+rather than an email header. A token can be generated without a browser using:
+
+```bash
+npm run generate:defraid-token
+```
+
+The script reads its configuration from `.env` (see [.env.example](./.env.example) for the full list). At a minimum
+you need the credentials of the user under test (`DEFRA_ID_CRN` and `DEFRA_ID_PASSWORD`) and the Defra Identity OIDC client
+config (`DEFRA_ID_WELL_KNOWN_URL`, `DEFRA_ID_CLIENT_ID`, `DEFRA_ID_CLIENT_SECRET`, `DEFRA_ID_SERVICE_ID`,
+`DEFRA_ID_POLICY` and `DEFRA_ID_REDIRECT_URL`). If the CRN is linked to more than one business, the first one is
+used; set `DEFRA_ID_RELATIONSHIP_ID` to pick a specific one.
+
+The token is printed to stdout; save it as `DEFRA_ID_TOKEN` in `.env` to reuse it.
+
+To run the contract tests against the external upstream, set `CDP_API_KEY` and `KITS_EXTERNAL_URL` in `.env`
+(again, see [.env.example](./.env.example)) and run:
+
+```bash
+npm run test:contract:local -- perm
+```
+
+If `DEFRA_ID_TOKEN` is not set, the test script generates one automatically using the same Defra Identity config.
+See the [contract testing README](./test/contract/README.md) for more detail.
 
 ## Docker
 

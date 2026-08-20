@@ -32,7 +32,7 @@ usage() {
   echo "  KITS_INTERNAL_URL  - the URL of the KITS API to use (this should be the DAL Mock proxy endpoint, via the ephemeral endpoint)"
   echo "  CDP_API_KEY    - CDP Platform developer API key"
   echo "  DEFRA_ID_TOKEN - a pre-issued Defra Identity token; if unset one is generated"
-  echo "                   with scripts/get-defra-id-token.js, which needs CRN,"
+  echo "                   with scripts/get-defra-id-token.js, which needs DEFRA_ID_CRN,"
   echo "                   DEFRA_ID_PASSWORD and the DEFRA_ID_* client config (see .env.example)"
   echo "  KITS_EXTERNAL_URL - the URL of the KITS EXTERNAL proxy endpoint (defaults to"
   echo "                      the deployed mock's /proxy/external/extapi ephemeral route)"
@@ -50,12 +50,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Resolve the Defra ID token (generating one if needed) and default CRN/ORG_ID from
-# its claims.
+# Resolve the Defra ID token (generating one if needed) and default DEFRA_ID_CRN and
+# DEFRA_ID_RELATIONSHIP_ID (the example orgId) from its claims.
 resolve_defra_id_token() {
   if [ -z "${DEFRA_ID_TOKEN}" ]; then
-    if [ -z "${CRN}" ]; then
-      echo "ERROR: CRN (plus DEFRA_ID_PASSWORD and the DEFRA_ID_* config) must be set to generate a Defra Identity token" 1>&2
+    if [ -z "${DEFRA_ID_CRN}" ]; then
+      echo "ERROR: DEFRA_ID_CRN (plus DEFRA_ID_PASSWORD and the DEFRA_ID_* config) must be set to generate a Defra Identity token" 1>&2
       usage
       exit 1
     fi
@@ -70,8 +70,8 @@ resolve_defra_id_token() {
   claim() {
     node -p 'JSON.parse(Buffer.from(process.argv[2].split(".")[1], "base64url").toString())[process.argv[1]] ?? ""' "$1" "${DEFRA_ID_TOKEN}"
   }
-  CRN="${CRN:-$( claim contactId )}"
-  ORG_ID="${ORG_ID:-$( claim currentRelationshipId )}"
+  DEFRA_ID_CRN="${DEFRA_ID_CRN:-$( claim contactId )}"
+  ORG_ID="${DEFRA_ID_RELATIONSHIP_ID:-$( claim currentRelationshipId )}"
 }
 
 # check OPTION argument
@@ -210,8 +210,8 @@ elif [ "${gateway}" = "kits-external" ]; then # KITS EXTERNAL gateway
     usage
     exit 1
   fi
-  if [ -z "${CRN}" ]; then
-    echo "ERROR: CRN is not set and could not be derived from the Defra ID token" 1>&2
+  if [ -z "${DEFRA_ID_CRN}" ]; then
+    echo "ERROR: DEFRA_ID_CRN is not set and could not be derived from the Defra ID token" 1>&2
     usage
     exit 1
   fi
@@ -226,7 +226,7 @@ elif [ "${gateway}" = "kits-external" ]; then # KITS EXTERNAL gateway
       run /tmp/schema.json \
         --header "x-api-key: ${CDP_API_KEY}" \
         --header "Authorization: ${DEFRA_ID_TOKEN}" \
-        --header "crn: ${CRN}" \
+        --header "crn: ${DEFRA_ID_CRN}" \
         --exclude-checks=unsupported_method,not_a_server_error \
         --report-vcr-path /tmp/vcr.yaml \
         --url "${KITS_EXTERNAL_URL:-https://ephemeral-protected.api.dev.cdp-int.defra.cloud/fcp-dal-upstream-mock/proxy/external/extapi}"

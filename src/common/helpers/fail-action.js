@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { createLogger } from './logging/logger.js'
 
 const logger = createLogger()
@@ -55,10 +56,11 @@ export const emulateUpstreamErrors = (request, h) => {
       return h.response({ code, message: 'HTTP 422 ' }).code(code)
     }
     if (code === 500) {
+      const logId = randomBytes(8).toString('hex')
       return h
         .response({
           code,
-          message: 'There was an error processing your request. It has been logged (ID someID)'
+          message: `There was an error processing your request. It has been logged (ID ${logId}).`
         })
         .code(code)
     }

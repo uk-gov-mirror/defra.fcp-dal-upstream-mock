@@ -1,4 +1,5 @@
 import Hapi from '@hapi/hapi'
+import { emulateUpstreamErrors } from '../../../../src/common/helpers/fail-action.js'
 import { land } from '../../../../src/routes/kits-v1/land.js'
 import { loadSchema } from '../../../../src/utils/validatePayload.js'
 
@@ -7,6 +8,7 @@ describe('Land routes', () => {
   beforeAll(async () => {
     server = Hapi.server()
     server.route(land)
+    server.ext('onPreResponse', emulateUpstreamErrors)
     await Promise.all([
       server.initialize(),
       loadSchema('/routes/kits-v1/land-schema.oas.yml').then((s) => (schema = s))
@@ -55,13 +57,39 @@ describe('Land routes', () => {
       expect(statusCode).toBe(403)
     })
 
-    test('should return 500 if supplied historicDate is invalid', async () => {
+    test('should return 404 if organisationId overflows a Java Long', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/lms/organisation/9223372036854775808/parcels/historic/01-Jan-25'
+      })
+      expect(statusCode).toBe(404)
+      expect(result).toEqual({ code: 404, message: 'HTTP 404 Not Found' })
+    })
+
+    test('should return 403 if supplied historicDate is badly formed', async () => {
       const { statusCode } = await server.inject({
         method: 'GET',
         url: '/lms/organisation/111111111/parcels/historic/invalid'
       })
-      expect(statusCode).toBe(500)
+      expect(statusCode).toBe(403)
     })
+
+    test.each([['00-AAA-00'], ['00-jul-24'], ['99-Jul-24']])(
+      'should return 500 if historicDate matches the pattern but cannot be parsed (%s)',
+      async (historicDate) => {
+        const { result, statusCode } = await server.inject({
+          method: 'GET',
+          url: `/lms/organisation/111111111/parcels/historic/${historicDate}`
+        })
+        expect(statusCode).toBe(500)
+        expect(result).toEqual({
+          code: 500,
+          message: expect.stringMatching(
+            /^There was an error processing your request\. It has been logged \(ID [0-9a-f]{16}\)\.$/
+          )
+        })
+      }
+    )
 
     test('should not return data where land is defined AND empty in id-lookups for the organisation', async () => {
       const { result, statusCode } = await server.inject({
@@ -173,6 +201,31 @@ describe('Land routes', () => {
       expect(statusCode).toBe(403)
     })
 
+    test('should return 200 even if organisationId overflows a Java Long (upstream never parses it)', async () => {
+      const { result, statusCode } = await server.inject({
+        method: 'GET',
+        url: '/lms/organisation/9223372036854775808/parcel/sheet-id/SS6627/parcel-id/5662/historic/01-Mar-25/land-covers'
+      })
+      expect(statusCode).toBe(200)
+      expect(result.type).toBe('FeatureCollection')
+    })
+
+    test('should return 403 if historicDate is badly formed', async () => {
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: '/lms/organisation/111111111/parcel/sheet-id/SS6627/parcel-id/5662/historic/invalid/land-covers'
+      })
+      expect(statusCode).toBe(403)
+    })
+
+    test('should return 500 if historicDate matches the pattern but cannot be parsed', async () => {
+      const { statusCode } = await server.inject({
+        method: 'GET',
+        url: '/lms/organisation/111111111/parcel/sheet-id/SS6627/parcel-id/5662/historic/00-AAA-00/land-covers'
+      })
+      expect(statusCode).toBe(500)
+    })
+
     test('should treat includeGeometries=null as false', async () => {
       const { result, statusCode } = await server.inject({
         method: 'GET',
@@ -267,12 +320,24 @@ describe('Land routes', () => {
       })
     })
 
-    test('should return 403 if organisationId is not numeric', async () => {
-      const { statusCode } = await server.inject({
+    test.each([['nonexistent'], ['0.0'], ['1e5'], ['0x10'], ['-5'], ['99999999999999999999']])(
+      'should return 403 if organisationId is not 1-19 digits (%s)',
+      async (organisationId) => {
+        const { statusCode } = await server.inject({
+          method: 'GET',
+          url: `/lms/organisation/${organisationId}/geometries?bbox=0,0,0,0`
+        })
+        expect(statusCode).toBe(403)
+      }
+    )
+
+    test('should return 404 if organisationId overflows a Java Long', async () => {
+      const { result, statusCode } = await server.inject({
         method: 'GET',
-        url: '/lms/organisation/nonexistent/geometries?bbox=0,0,0,0'
+        url: '/lms/organisation/9223372036854775808/geometries?bbox=0,0,0,0'
       })
-      expect(statusCode).toBe(403)
+      expect(statusCode).toBe(404)
+      expect(result).toEqual({ code: 404, message: 'HTTP 404 Not Found' })
     })
 
     test('should return 400 if bounding box is missing', async () => {

@@ -64,3 +64,21 @@ enabled = false
 
 # ======================= END OF =======================
 # ============== Bank submit / validate ================
+
+
+
+# ======================= START OF =======================
+# ================== Land land-covers ====================
+
+[[operations]]
+include-path = "/lms/organisation/{organisationId}/parcel/sheet-id/{sheetId}/parcel-id/{parcelId}/historic/{historicDate}/land-covers"
+include-method = "GET"
+
+# Skip: upstream never parses organisationId on this endpoint (200 even for values
+# overflowing a Java Long) and ignores junk includeGeometries values/extra query
+# params, so schema-invalid requests are still served.
+[operations.checks.negative_data_rejection]
+enabled = false
+
+# ======================= END OF =======================
+# ================== Land land-covers ==================

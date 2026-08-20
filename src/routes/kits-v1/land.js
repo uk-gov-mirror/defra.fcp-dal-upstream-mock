@@ -1,3 +1,5 @@
+import Boom from '@hapi/boom'
+import { createLogger } from '../../common/helpers/logging/logger.js'
 import {
   retrieveCovers,
   retrieveCoversSummary,
@@ -5,16 +7,24 @@ import {
   retrieveParcelGeometries,
   retrieveParcels
 } from '../../factories/land/land.factory.js'
-import Boom from '@hapi/boom'
-import { createLogger } from '../../common/helpers/logging/logger.js'
 
 const logger = createLogger('land.route')
 
-const extractOrganisationId = (request) => {
+// Upstream's WAF only lets 1-19 digit organisationId path segments through.
+const ORGANISATION_ID_PATTERN = /^\d{1,19}$/
+
+// 19-digit values that overflow a Java Long fail upstream's path-param conversion with a plain 404
+const JAVA_LONG_MAX = 9223372036854775807n
+
+const extractOrganisationId = (request, { parseAsLong = true } = {}) => {
   const organisationId = request.params.organisationId
-  if (!Number.isInteger(Number(organisationId))) {
+  if (!ORGANISATION_ID_PATTERN.test(organisationId)) {
     logger.warn(`Badly formed organisation ID (${organisationId})`)
     throw Boom.forbidden()
+  }
+  if (parseAsLong && BigInt(organisationId) > JAVA_LONG_MAX) {
+    logger.warn(`Organisation ID overflows a Java Long (${organisationId})`)
+    throw Boom.notFound()
   }
   return organisationId
 }
@@ -47,10 +57,18 @@ const extractIncludeGeometries = (request) => {
 // Dates must have format DD-MMM-YY (e.g. 10-Jul-24)
 const HISTORIC_DATE_PATTERN = /^\d{2}-[A-Za-z]{3}-\d{2}$/
 
-const validateHistoricDate = (request, errorFunction) => {
+const PARSEABLE_DATE_PATTERN =
+  /^(0[1-9]|[12]\d|3[01])-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2}$/
+
+const validateHistoricDate = (request) => {
   const { historicDate } = request.params
   if (!HISTORIC_DATE_PATTERN.test(historicDate)) {
-    throw errorFunction()
+    logger.warn(`Badly formed historic date (${historicDate})`)
+    throw Boom.forbidden()
+  }
+  if (!PARSEABLE_DATE_PATTERN.test(historicDate)) {
+    logger.warn(`Unparseable historic date (${historicDate})`)
+    throw Boom.internal()
   }
 }
 
@@ -60,7 +78,7 @@ export const land = [
     path: '/lms/organisation/{organisationId}/parcels/historic/{historicDate}',
     handler: async (request, h) => {
       const organisationId = extractOrganisationId(request)
-      validateHistoricDate(request, Boom.internal)
+      validateHistoricDate(request)
 
       const parcels = retrieveParcels(organisationId)
       return h.response(parcels)
@@ -71,7 +89,7 @@ export const land = [
     path: '/lms/organisation/{organisationId}/parcel-details/historic/{historicDate}',
     handler: async (request, h) => {
       const organisationId = extractOrganisationId(request)
-      validateHistoricDate(request, Boom.forbidden)
+      validateHistoricDate(request)
 
       const parcelDetails = retrieveParcelDetails(organisationId)
       return h.response(parcelDetails)
@@ -83,7 +101,8 @@ export const land = [
     handler: async (request, h) => {
       const { sheetId, parcelId } = request.params
 
-      const organisationId = extractOrganisationId(request)
+      const organisationId = extractOrganisationId(request, { parseAsLong: false })
+      validateHistoricDate(request)
       const includeGeometries = extractIncludeGeometries(request)
 
       const covers = retrieveCovers(organisationId, sheetId, parcelId, includeGeometries)
@@ -95,7 +114,7 @@ export const land = [
     path: '/lms/organisation/{organisationId}/covers-summary/historic/{historicDate}',
     handler: async (request, h) => {
       const organisationId = extractOrganisationId(request)
-      validateHistoricDate(request, Boom.forbidden)
+      validateHistoricDate(request)
 
       const coversSummary = retrieveCoversSummary(organisationId)
       return h.response(coversSummary)
